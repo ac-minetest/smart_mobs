@@ -612,7 +612,7 @@ function mobs:register_mob(name, def)
 						self.following = nil
 					else
 						local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-						yaw = (math.atan(vec.z / vec.x) + math.pi / 2) + self.rotate
+						yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 						if p.x > s.x then
 							yaw = yaw + math.pi
 						end
@@ -667,7 +667,7 @@ function mobs:register_mob(name, def)
 
 					if lp ~= nil then
 						local vec = {x = lp.x - s.x, y = lp.y - s.y, z = lp.z - s.z}
-						yaw = (math.atan(vec.z / vec.x) + math.pi / 2) + self.rotate
+						yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 						if lp.x > s.x then
 							yaw = yaw + math.pi
 						end
@@ -719,7 +719,7 @@ end
 				-- if water nearby then turn away
 				if lp then
 					local vec = {x = lp.x - s.x, y = lp.y - s.y, z = lp.z - s.z}
-					yaw = math.atan(vec.z / vec.x) + 3 * math.pi / 2 + self.rotate
+					yaw = math.atan(vec.z / vec.x) + 3 * math.pi / 2 - self.rotate
 					if lp.x > s.x then
 						yaw = yaw + math.pi
 					end
@@ -775,7 +775,7 @@ end
 				end
 				
 				local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-				yaw = math.atan(vec.z / vec.x) + math.pi / 2 + self.rotate
+				yaw = math.atan(vec.z / vec.x) + math.pi / 2 - self.rotate
 				if p.x > s.x then
 					yaw = yaw+math.pi
 				end
@@ -903,7 +903,7 @@ end
 				end
 				
 				local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-				yaw = (math.atan(vec.z / vec.x) + math.pi / 2) + self.rotate
+				yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 				if p.x > s.x then
 					yaw = yaw+math.pi
 				end
@@ -976,7 +976,7 @@ end
 				end
 				
 				local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-				yaw = (math.atan(vec.z/vec.x)+math.pi/2) + self.rotate
+				yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 				if p.x > s.x then
 					yaw = yaw + math.pi
 				end

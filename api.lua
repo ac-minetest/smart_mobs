@@ -305,7 +305,7 @@ function mobs:register_mob(name, def)
 				and (minetest.get_node_light(pos) or 0) > 12 then
 					self.object:set_hp(self.object:get_hp() - self.light_damage)
 					effect(pos, 5, "tnt_smoke.png")
-					check_for_death(self)
+					if check_for_death(self) then return end
 				end
 
 				pos.y = pos.y + self.collisionbox[2] -- foot level
@@ -319,7 +319,7 @@ function mobs:register_mob(name, def)
 				and nodef.groups.water then
 					self.object:set_hp(self.object:get_hp() - self.water_damage)
 					effect(pos, 5, "bubble.png")
-					check_for_death(self)
+					if check_for_death(self) then return end
 				end
 
 				-- lava or fire
@@ -327,7 +327,7 @@ function mobs:register_mob(name, def)
 				and (nodef.groups.lava or nod.name == "fire:basic_flame") then
 					self.object:set_hp(self.object:get_hp() - self.lava_damage)
 					effect(pos, 5, "fire_basic_flame.png")
-					check_for_death(self)
+					if check_for_death(self) then return end
 				end
 
 			end

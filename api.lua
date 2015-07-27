@@ -1,4 +1,4 @@
--- Mobs Api (26th July 2015)
+-- Mobs Api (27th July 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1127,27 +1127,33 @@ end
 				})
 			end
 
-			check_for_death(self)
+			-- exit here if dead
+			if check_for_death(self) then
+				return
+			end
 
 			-- blood_particles
-			local pos = self.object:getpos()
-			pos.y = pos.y + (-self.collisionbox[2] + self.collisionbox[5]) / 2
 			if self.blood_amount > 0
-			--and pos
 			and enable_blood == true then
+				local pos = self.object:getpos()
+				pos.y = pos.y + (-self.collisionbox[2] + self.collisionbox[5]) / 2
 				effect(pos, self.blood_amount, self.blood_texture)
 			end
 
-			-- knock back effect, adapted from blockmen's pyramids mod
-			local kb = self.knock_back
-			local r = self.recovery_time
-			local v = self.object:getvelocity()
-			if tflp < tool_capabilities.full_punch_interval then
-				kb = kb * ( tflp / tool_capabilities.full_punch_interval )
-				r = r * ( tflp / tool_capabilities.full_punch_interval )
+			-- knock back effect
+			if self.knock_back > 0 then
+				local kb = self.knock_back
+				local r = self.recovery_time
+				local v = self.object:getvelocity()
+				if tflp < tool_capabilities.full_punch_interval then
+					if kb > 0 then
+						kb = kb * ( tflp / tool_capabilities.full_punch_interval )
+					end
+					r = r * ( tflp / tool_capabilities.full_punch_interval )
+				end
+				self.object:setvelocity({x = dir.x * kb,y = 0,z = dir.z * kb})
+				self.pause_timer = r
 			end
-			self.object:setvelocity({x = dir.x * kb,y = 0,z = dir.z * kb})
-			self.pause_timer = r
 
 			-- attack puncher and call other mobs for help
 			if self.passive == false
@@ -1345,7 +1351,7 @@ function check_for_death(self)
 				max_hear_distance = self.sounds.distance
 			})
 		end
-		return
+		return false
 	end
 	local pos = self.object:getpos()
 	self.object:remove()
@@ -1372,6 +1378,7 @@ function check_for_death(self)
 	if self.on_die then
 		self.on_die(self, pos)
 	end
+	return true
 end
 
 -- from TNT mod

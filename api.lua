@@ -1,4 +1,4 @@
--- Mobs Api (27th July 2015)
+-- Mobs Api (1st August 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -20,7 +20,6 @@ function mobs:register_mob(name, def)
 		do_custom = def.do_custom,
 		jump_height = def.jump_height or 6,
 		jump_chance = def.jump_chance or 0,
-		--rotate = def.rotate or 0, -- 0=front, 1.5=side, 3.0=back, 4.5=side2
 		rotate = math.rad(def.rotate or 0), --  0=front, 90=side, 180=back, 270=side2
 		lifetimer = def.lifetimer or 180, -- 3 minutes
 		hp_min = def.hp_min or 5,
@@ -255,7 +254,7 @@ function mobs:register_mob(name, def)
 					-- fall damage
 					if self.fall_damage == 1
 					and self.object:getvelocity().y == 0 then
-						local d = self.old_y - self.object:getpos().y
+						local d = (self.old_y or 0) - self.object:getpos().y
 						if d > 5 then
 							self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
 							effect(self.object:getpos(), 5, "tnt_smoke.png")
@@ -491,11 +490,8 @@ function mobs:register_mob(name, def)
 					self.object:set_properties({
 						textures = self.base_texture,
 						mesh = self.base_mesh,
-						visual_size = {
-							x = self.visual_size.x,
-							y = self.visual_size.y
-						},
-						collisionbox = self.collisionbox,
+						visual_size = self.base_size,
+						collisionbox = self.base_colbox,
 					})
 				end
 			end
@@ -535,17 +531,21 @@ function mobs:register_mob(name, def)
 							mob:set_properties({
 								textures = textures,
 								visual_size = {
-									x = self.visual_size.x / 2,
-									y = self.visual_size.y / 2
+									x = self.base_size.x / 2,
+									y = self.base_size.y / 2
 								},
 								collisionbox = {
-									self.collisionbox[1] / 2, self.collisionbox[2] / 2, self.collisionbox[3] / 2,
-									self.collisionbox[4] / 2, self.collisionbox[5] / 2, self.collisionbox[6] / 2
+									self.base_colbox[1] / 2,
+									self.base_colbox[2] / 2,
+									self.base_colbox[3] / 2,
+									self.base_colbox[4] / 2,
+									self.base_colbox[5] / 2,
+									self.base_colbox[6] / 2
 								},
 							})
 							ent2.child = true
 							ent2.tamed = true
-							ent2.following = ent -- follow mother
+							--ent2.following = ent -- follow mother
 						end)
 						num = 0
 						break
@@ -1028,17 +1028,19 @@ end
 				end
 			end
 
-			-- select random texture, set model
+			-- select random texture, set model and size
 			if not self.base_texture then
 				self.base_texture = def.textures[math.random(1, #def.textures)]
 				self.base_mesh = def.mesh
+				self.base_size = self.visual_size
+				self.base_colbox = self.collisionbox
 			end
 
 			-- set texture, model and size
 			local textures = self.base_texture
 			local mesh = self.base_mesh
-			local vis_size = def.visual_size
-			local colbox = def.collisionbox
+			local vis_size = self.base_size
+			local colbox = self.base_colbox
 
 			-- specific texture if gotten
 			if self.gotten == true
@@ -1055,19 +1057,19 @@ end
 			-- if object is child then set half size
 			if self.child == true then
 				vis_size = {
-					x = def.visual_size.x / 2,
-					y = def.visual_size.y / 2
+					x = self.base_size.x / 2,
+					y = self.base_size.y / 2
 				}
 				if def.child_texture then
 					textures = def.child_texture[1]
 				end
 				colbox = {
-					def.collisionbox[1] / 2,
-					def.collisionbox[2] / 2,
-					def.collisionbox[3] / 2,
-					def.collisionbox[4] / 2,
-					def.collisionbox[5] / 2,
-					def.collisionbox[6] / 2
+					self.base_colbox[1] / 2,
+					self.base_colbox[2] / 2,
+					self.base_colbox[3] / 2,
+					self.base_colbox[4] / 2,
+					self.base_colbox[5] / 2,
+					self.base_colbox[6] / 2
 				}
 			end
 

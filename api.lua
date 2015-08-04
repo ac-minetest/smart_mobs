@@ -1,12 +1,13 @@
--- Mobs Api (1st August 2015)
+-- Mobs Api (4th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
 -- Initial settings check
-local damage_enabled = minetest.setting_getbool("enable_damage")
-local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
+local damage_enabled = minetest.setting_getbool("enable_damage") or true
+local peaceful_only = minetest.setting_getbool("only_peaceful_mobs") or false
 local enable_blood = minetest.setting_getbool("mobs_enable_blood") or true
 mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 0
+mobs.remove = minetest.setting_getbool("remove_far_mobs") or false
 
 function mobs:register_mob(name, def)
 	minetest.register_entity(name, {
@@ -787,8 +788,8 @@ end
 						self.timer = 0
 						self.blinktimer = 0
 					else
-					     self.timer = 0
-						 self.blinktimer = 0
+						self.timer = 0
+						self.blinktimer = 0
 						if self.get_velocity(self) <= 0.5
 						and self.object:getvelocity().y == 0 then
 							local v = self.object:getvelocity()
@@ -905,7 +906,7 @@ end
 				local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 				yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 				if p.x > s.x then
-					yaw = yaw+math.pi
+					yaw = yaw + math.pi
 				end
 				self.object:setyaw(yaw)
 				-- attack distance is 2 + half of mob width so the bigger mobs can attack (like slimes)
@@ -1080,6 +1081,8 @@ end
 			self.object:set_hp( self.health )
 			self.object:set_armor_groups({fleshy = self.armor})
 			self.state = "stand"
+			self.order = "stand"
+			self.following = nil
 			self.old_y = self.object:getpos().y
 			self.object:setyaw(math.random(1, 360) / 180 * math.pi)
 			self.sounds.distance = (self.sounds.distance or 10)
@@ -1093,6 +1096,15 @@ end
 		end,
 
 		get_staticdata = function(self)
+
+-- remove mob when out of range unless tamed
+if mobs.remove == true and self.remove_ok and not self.tamed then
+	print ("REMOVED", self.remove_ok, self.name)
+	self.object:remove()
+end
+self.remove_ok = true
+self.attack = nil
+
 			local tmp = {}
 			for _,stat in pairs(self) do
 				local t = type(stat)

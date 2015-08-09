@@ -135,5 +135,25 @@ end
 
 mobs:register_spawn("mobs:sheep_white", {"default:dirt_with_grass", "ethereal:green_dirt"}, 20, 10, 15000, 1, 31000)
 
--- compatibility
+-- compatibility (item and entity)
 minetest.register_alias("mobs:sheep", "mobs:sheep_white")
+
+minetest.register_entity("mobs:sheep", {
+	hp_max = 1,
+	physical = true,
+	collide_with_objects = true,
+	visual = "mesh",
+	mesh = "mobs_sheep.b3d",
+	visual_size = {x = 1, y = 1},
+	textures = {"mobs_sheep.png"},
+	velocity = {x = 0, y = 0, z = 0},
+	collisionbox = {-0.4, -1, -0.4, 0.4, 0.3, 0.4},
+	is_visible = true,
+	speed = 0,
+
+	on_rightclick = function(self, clicker)
+		clicker:get_inventory():add_item("main", "mobs:sheep_white")
+		self.object:remove()
+	end,
+
+})

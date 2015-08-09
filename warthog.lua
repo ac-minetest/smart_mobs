@@ -42,42 +42,7 @@ mobs:register_mob("mobs:pumba", {
 		punch_end = 100,
 	},
 	on_rightclick = function(self, clicker)
-		local item = clicker:get_wielded_item()
-		local name = clicker:get_player_name()
-
-		if item:get_name() == "default:apple" then
-			-- take item
-			if not minetest.setting_getbool("creative_mode") then
-				item:take_item()
-				clicker:set_wielded_item(item)
-			end
-			-- make child grow quicker
-			if self.child == true then
-				self.hornytimer = self.hornytimer + 10
-				return
-			end
-			-- feed and tame
-			self.food = (self.food or 0) + 1
-			if self.food > 7 then
-				self.food = 0
-				if self.hornytimer == 0 then
-					self.horny = true
-				end
-				self.tamed = true
-				-- make owner
-				if self.owner == "" then
-					self.owner = name
-				end
-				minetest.sound_play("mobs_pig", {
-					object = self.object,
-					gain = 1.0,
-					max_hear_distance = 10,
-					loop = false,
-				})
-			end
-			return
-		end
-
+		mobs:feed_tame(self, clicker, 8, true)
 		mobs:capture_mob(self, clicker, 0, 5, 50, false, nil)
 	end,
 })

@@ -1,4 +1,4 @@
--- Mobs Api (4th August 2015)
+-- Mobs Api (9th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -508,13 +508,26 @@ function mobs:register_mob(name, def)
 				for i,obj in ipairs(ents) do
 					ent = obj:get_luaentity()
 
-				-- quick fix for racist sheep
-				if ent
-				and string.find(ent.name, "mobs:sheep_") then
-					ent.name = "mobs:sheep"
+				-- check for same animal with different colour
+				local canmate = false
+				if ent then
+					if ent.name == self.name then
+						canmate = true
+					else
+						local entname = string.split(ent.name,":")
+						local selfname = string.split(self.name,":")
+						if entname[1] == selfname[1] then
+							entname = string.split(entname[2],"_")
+							selfname = string.split(selfname[2],"_")
+							if entname[1] == selfname[1] then
+								canmate = true
+							end
+						end
+					end
 				end
+
 					if ent
-					and ent.name == self.name
+					and canmate == true
 					and ent.horny == true
 					and ent.hornytimer <= 40 then
 						num = num + 1
@@ -1564,5 +1577,49 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 				minetest.chat_send_player(name, "Missed!")
 			end
 		end
+	end
+end
+
+-- feeding, taming and breeding (thanks blert2112)
+function mobs:feed_tame(self, clicker, feed_count, breed)
+	local item = clicker:get_wielded_item()
+	if item:get_name() == self.follow then
+
+		-- take item
+		if not minetest.setting_getbool("creative_mode") then
+			item:take_item()
+			clicker:set_wielded_item(item)
+		end
+
+		-- make children grow quicker
+		if self.child == true then
+			self.hornytimer = self.hornytimer + 20
+			return true
+		end
+
+		-- feed and tame
+		self.food = (self.food or 0) + 1
+		if self.food == feed_count then
+			self.food = 0
+			if breed and self.hornytimer == 0 then
+				self.horny = true
+			end
+			self.gotten = false
+			self.tamed = true
+			if not self.owner or self.owner == "" then
+				self.owner = clicker:get_player_name()
+			end
+
+			-- make sound when fed so many times
+			if self.sounds.random then
+				minetest.sound_play(self.sounds.random, {
+					object = self.object,
+					max_hear_distance = self.sounds.distance
+				})
+			end
+		end
+		return true
+	else
+		return false
 	end
 end

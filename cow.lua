@@ -49,61 +49,28 @@ mobs:register_mob("mobs:cow", {
 	replace_what = {"default:grass_3", "default:grass_4", "default:grass_5", "farming:wheat_8"},
 	replace_with = "air",
 	on_rightclick = function(self, clicker)
-		local tool = clicker:get_wielded_item()
-		local name = clicker:get_player_name()
+		if not mobs:feed_tame(self, clicker, 8, true) then
+			local tool = clicker:get_wielded_item()
 
-		if tool:get_name() == "bucket:bucket_empty" then
-			if self.gotten == true
-			or self.child == true then
+			-- milk cow with empty bucket
+			if tool:get_name() == "bucket:bucket_empty" then
+				if self.gotten == true
+				or self.child == true then
+					return
+				end
+				local inv = clicker:get_inventory()
+				inv:remove_item("main", "bucket:bucket_empty")
+				if inv:room_for_item("main", {name = "mobs:bucket_milk"}) then
+					clicker:get_inventory():add_item("main", "mobs:bucket_milk")
+				else
+					local pos = self.object:getpos()
+					pos.y = pos.y + 0.5
+					minetest.add_item(pos, {name = "mobs:bucket_milk"})
+				end
+				self.gotten = true -- milked
 				return
 			end
-			local inv = clicker:get_inventory()
-			inv:remove_item("main", "bucket:bucket_empty")
-			if inv:room_for_item("main", {name = "mobs:bucket_milk"}) then
-				clicker:get_inventory():add_item("main", "mobs:bucket_milk")
-			else
-				local pos = self.object:getpos()
-				pos.y = pos.y + 0.5
-				minetest.add_item(pos, {name = "mobs:bucket_milk"})
-			end
-			self.gotten = true -- milked
-			return
-		end
-
-		if tool:get_name() == "farming:wheat" then
-			-- take item
-			if not minetest.setting_getbool("creative_mode") then
-				tool:take_item(1)
-				clicker:set_wielded_item(tool)
-			end
-			-- make child grow quicker
-			if self.child == true then
-				self.hornytimer = self.hornytimer + 10
-				return
-			end
-			-- feed and tame
-			self.food = (self.food or 0) + 1
-			if self.food > 7 then
-				self.food = 0
-				if self.hornytimer == 0 then
-					self.horny = true
-				end
-				self.gotten = false -- ready to be milked again
-				self.tamed = true
-				-- make owner
-				if self.owner == "" then
-					self.owner = name
-				end
-				minetest.sound_play("mobs_cow", {
-					object = self.object,
-					gain = 1.0,
-					max_hear_distance = 10,
-					loop = false,
-				})
-			end
-			return
-		end
-
+		end	
 		mobs:capture_mob(self, clicker, 0, 5, 60, false, nil)
 	end,
 })

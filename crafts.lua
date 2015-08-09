@@ -49,3 +49,17 @@ minetest.register_craft({
 		{"farming:string", "default:stick", "farming:string"},
 	}
 })
+
+-- shears (right click to shear animal)
+minetest.register_tool("mobs:shears", {
+	description = "Steel Shears (right-click to shear)",
+	inventory_image = "mobs_shears.png",
+})
+
+minetest.register_craft({
+	output = 'mobs:shears',
+	recipe = {
+		{'', 'default:steel_ingot', ''},
+		{'', 'group:stick', 'default:steel_ingot'},
+	}
+})

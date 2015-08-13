@@ -1641,6 +1641,12 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 			clicker:set_wielded_item(item)
 		end
 
+		-- heal health
+		local hp = self.object:get_hp()
+		hp = math.min(hp + 4, self.hp_max)
+		self.object:set_hp(hp)
+		self.health = hp
+
 		-- make children grow quicker
 		if self.child == true then
 			self.hornytimer = self.hornytimer + 20

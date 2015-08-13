@@ -43,7 +43,7 @@ mobs:register_mob("mobs:chicken", {
 		walk_start = 20,
 		walk_end = 40,
 	},
-	follow = "farming:seed_wheat",
+	follow = {"farming:seed_wheat", "farming:seed_cotton"},
 	view_range = 5,
 	replace_rate = 8000,
 	replace_what = {"air"},

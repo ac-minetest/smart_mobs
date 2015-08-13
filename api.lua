@@ -1,4 +1,4 @@
--- Mobs Api (9th August 2015)
+-- Mobs Api (13th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -49,7 +49,7 @@ function mobs:register_mob(name, def)
 		shoot_interval = def.shoot_interval,
 		sounds = def.sounds or {},
 		animation = def.animation,
-		follow = def.follow or "",
+		follow = def.follow, -- or "",
 		jump = def.jump or true,
 		walk_chance = def.walk_chance or 50,
 		attacks_monsters = def.attacks_monsters or false,
@@ -603,7 +603,8 @@ function mobs:register_mob(name, def)
 				-- stop following player if not holding specific item
 				if self.following
 				and self.following.is_player
-				and self.following:get_wielded_item():get_name() ~= self.follow then
+				--and self.following:get_wielded_item():get_name() ~= self.follow then
+				and follow_holding(self, self.following) == false then
 					self.following = nil
 				end
 			end
@@ -791,7 +792,7 @@ end
 				local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 				yaw = math.atan(vec.z / vec.x) + math.pi / 2 - self.rotate
 				if p.x > s.x then
-					yaw = yaw+math.pi
+					yaw = yaw + math.pi
 				end
 				self.object:setyaw(yaw)
 				if self.attack.dist > 3 then
@@ -1298,7 +1299,7 @@ end
 
 -- explosion
 function mobs:explosion(pos, radius, fire, smoke, sound)
-	-- node hit, bursts into flame (cannot blast through obsidian or protection redo mod items)
+	-- node hit, bursts into flame (cannot blast through unbreakable/specific nodes)
 	if not fire then fire = 0 end
 	if not smoke then smoke = 0 end
 	local pos = vector.round(pos)
@@ -1580,11 +1581,60 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 	end
 end
 
+-- follow what I'm holding ?
+function follow_holding(self, clicker)
+	local item = clicker:get_wielded_item()
+	local follow_item = false
+	local t = type(self.follow)
+
+	-- single item
+	if t == "string"
+	and item:get_name() == self.follow then
+		follow_item = true
+
+	-- multiple items
+	elseif t == "table" then
+		for no = 1, #self.follow do
+			if self.follow[no] == item:get_name() then
+				follow_item = true
+			end
+		end
+	end
+
+	-- true if can eat/tame with item
+	if follow_item == true then
+		return true
+	end
+
+	return false
+end
+
 -- feeding, taming and breeding (thanks blert2112)
 function mobs:feed_tame(self, clicker, feed_count, breed)
-	local item = clicker:get_wielded_item()
-	if item:get_name() == self.follow then
 
+	if not self.follow then return false end
+
+	local item = clicker:get_wielded_item()
+	local follow_item = false
+	local t = type(self.follow)
+
+	-- single item
+	if t == "string"
+	and item:get_name() == self.follow then
+		follow_item = true
+
+	-- multiple items
+	elseif t == "table" then
+		for no = 1, #self.follow do
+			if self.follow[no] == item:get_name() then
+				follow_item = true
+			end
+		end
+	end
+
+	-- can eat/tame with item in hand
+	if follow_holding(self, clicker) then
+--print ("mmm, tasty")
 		-- take item
 		if not minetest.setting_getbool("creative_mode") then
 			item:take_item()

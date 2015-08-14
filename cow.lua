@@ -79,12 +79,6 @@ mobs:register_spawn("mobs:cow", {"default:dirt_with_grass", "ethereal:green_dirt
 
 mobs:register_egg("mobs:cow", "Cow", "default_grass.png", 1)
 
--- leather
-minetest.register_craftitem("mobs:leather", {
-	description = "Leather",
-	inventory_image = "mobs_leather.png",
-})
-
 -- bucket of milk
 minetest.register_craftitem("mobs:bucket_milk", {
 	description = "Bucket of Milk",

@@ -383,14 +383,22 @@ function mobs:register_mob(name, def)
 				end
 			end
 			
-			-- environmental damage timer
+			-- environmental damage timer (every 1 second)
 			self.env_damage_timer = self.env_damage_timer + dtime
 			if self.state == "attack"
 			and self.env_damage_timer > 1 then
 				self.env_damage_timer = 0
 				do_env_damage(self)
+				-- custom function (defined in mob lua file)
+				if self.do_custom then
+					self.do_custom(self)
+				end
 			elseif self.state ~= "attack" then
 				do_env_damage(self)
+				-- custom function
+				if self.do_custom then
+					self.do_custom(self)
+				end
 			end
 			
 			-- find someone to attack
@@ -582,11 +590,6 @@ function mobs:register_mob(name, def)
 						break
 					end
 				end
-			end
-
-			-- custom function (defined in mob lua file)
-			if self.do_custom then
-				self.do_custom(self)
 			end
 
 			if self.type == "npc"

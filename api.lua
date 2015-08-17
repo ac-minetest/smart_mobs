@@ -567,7 +567,7 @@ function mobs:register_mob(name, def)
 							})
 							ent2.child = true
 							ent2.tamed = true
-							--ent2.following = ent -- follow mother
+							ent2.owner = self.owner
 						end)
 						num = 0
 						break

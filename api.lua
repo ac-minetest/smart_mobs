@@ -1,13 +1,13 @@
--- Mobs Api (13th August 2015)
+-- Mobs Api (17th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
--- Initial settings check
-local damage_enabled = minetest.setting_getbool("enable_damage") or true
-local peaceful_only = minetest.setting_getbool("only_peaceful_mobs") or false
-local enable_blood = minetest.setting_getbool("mobs_enable_blood") or true
-mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 0
-mobs.remove = minetest.setting_getbool("remove_far_mobs") or false
+-- Load settings
+local damage_enabled = minetest.setting_getbool("enable_damage")
+local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
+local disable_blood = minetest.setting_getbool("mobs_disable_blood")
+mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
+mobs.remove = minetest.setting_getbool("remove_far_mobs")
 
 function mobs:register_mob(name, def)
 	minetest.register_entity(name, {
@@ -68,7 +68,7 @@ function mobs:register_mob(name, def)
 		replace_offset = def.replace_offset or 0,
 		timer = 0,
 		env_damage_timer = 0, -- only if state = "attack"
-		attack = {player=nil, dist=nil},
+		attack = {player = nil, dist = nil},
 		state = "stand",
 		tamed = false,
 		pause_timer = 0,
@@ -1112,12 +1112,13 @@ end
 		get_staticdata = function(self)
 
 -- remove mob when out of range unless tamed
-if mobs.remove == true and self.remove_ok and not self.tamed then
+if mobs.remove and self.remove_ok and not self.tamed then
 	print ("REMOVED", self.remove_ok, self.name)
 	self.object:remove()
 end
 self.remove_ok = true
 self.attack = nil
+self.following = nil
 
 			local tmp = {}
 			for _,stat in pairs(self) do
@@ -1162,7 +1163,7 @@ self.attack = nil
 
 			-- blood_particles
 			if self.blood_amount > 0
-			and enable_blood == true then
+			and not disable_blood then
 				local pos = self.object:getpos()
 				pos.y = pos.y + (-self.collisionbox[2] + self.collisionbox[5]) / 2
 				effect(pos, self.blood_amount, self.blood_texture)

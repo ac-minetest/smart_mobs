@@ -1,4 +1,4 @@
--- Mobs Api (17th August 2015)
+-- Mobs Api (18th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -502,6 +502,11 @@ function mobs:register_mob(name, def)
 						visual_size = self.base_size,
 						collisionbox = self.base_colbox,
 					})
+					-- jump when grown to now fall into ground
+					local v = self.object:getvelocity()
+					v.y = self.jump_height
+					v.x = 0 ; v.z = 0
+					self.object:setvelocity(v)
 				end
 			end
 

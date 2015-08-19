@@ -1,4 +1,4 @@
--- Mobs Api (18th August 2015)
+-- Mobs Api (19th August 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1103,7 +1103,7 @@ end
 			self.object:set_hp( self.health )
 			self.object:set_armor_groups({fleshy = self.armor})
 			self.state = "stand"
-			self.order = "stand"
+			--self.order = "stand"
 			self.following = nil
 			self.old_y = self.object:getpos().y
 			self.object:setyaw(math.random(1, 360) / 180 * math.pi)

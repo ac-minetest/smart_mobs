@@ -1630,6 +1630,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 --print ("mmm, tasty")
 		-- take item
 		if not minetest.setting_getbool("creative_mode") then
+			local item = clicker:get_wielded_item()
 			item:take_item()
 			clicker:set_wielded_item(item)
 		end

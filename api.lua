@@ -599,10 +599,10 @@ function mobs:register_mob(name, def)
 
 			if self.type == "npc"
 			and self.order == "follow"
-			and self.state ~= "attack" then
+			and self.state ~= "attack"
+			and self.owner ~= "" then
 				-- npc stop following player if not owner
 				if self.following
-				and self.type == "npc"
 				and self.owner
 				and self.owner ~= self.following:get_player_name() then
 					self.following = nil
@@ -1349,7 +1349,8 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 			local n = minetest.get_node(p).name
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 				-- if chest then drop items inside
-				if n == "default:chest" then
+				if n == "default:chest"
+				or n == "3dchest:chest" then
 					local meta = minetest.get_meta(p)
 					local inv  = meta:get_inventory()
 					for i = 1,32 do
@@ -1500,7 +1501,9 @@ function mobs:register_arrow(name, def)
 					end
 					if self.hit_mob
 					and player:get_luaentity().name ~= self.object:get_luaentity().name
-					and player:get_luaentity().name ~= "__builtin:item" then
+					and player:get_luaentity().name ~= "__builtin:item"
+					and player:get_luaentity().name ~= "gauges:hp_bar"
+					and player:get_luaentity().name ~= "signs:text" then
 						self.hit_mob(self, player)
 						self.object:remove() ; -- print ("hit mob")
 						return
@@ -1598,26 +1601,20 @@ end
 -- follow what I'm holding ?
 function follow_holding(self, clicker)
 	local item = clicker:get_wielded_item()
-	local follow_item = false
 	local t = type(self.follow)
 
 	-- single item
 	if t == "string"
 	and item:get_name() == self.follow then
-		follow_item = true
+		return true
 
 	-- multiple items
 	elseif t == "table" then
 		for no = 1, #self.follow do
 			if self.follow[no] == item:get_name() then
-				follow_item = true
+				return true
 			end
 		end
-	end
-
-	-- true if can eat/tame with item
-	if follow_item == true then
-		return true
 	end
 
 	return false
@@ -1627,24 +1624,6 @@ end
 function mobs:feed_tame(self, clicker, feed_count, breed)
 
 	if not self.follow then return false end
-
-	local item = clicker:get_wielded_item()
-	local follow_item = false
-	local t = type(self.follow)
-
-	-- single item
-	if t == "string"
-	and item:get_name() == self.follow then
-		follow_item = true
-
-	-- multiple items
-	elseif t == "table" then
-		for no = 1, #self.follow do
-			if self.follow[no] == item:get_name() then
-				follow_item = true
-			end
-		end
-	end
 
 	-- can eat/tame with item in hand
 	if follow_holding(self, clicker) then

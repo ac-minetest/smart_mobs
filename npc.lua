@@ -76,7 +76,7 @@ mobs:register_mob("mobs:npc", {
 				minetest.add_item(pos, {
 					name = mobs.npc_drops[math.random(1, #mobs.npc_drops)]
 				})
-
+				return
 			else
 				-- if owner switch between follow and stand
 				if self.owner and self.owner == clicker:get_player_name() then

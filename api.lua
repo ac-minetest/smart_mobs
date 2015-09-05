@@ -1,4 +1,4 @@
--- Mobs Api (28th August 2015)
+-- Mobs Api (5th September 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1144,8 +1144,9 @@ self.following = nil
 		on_punch = function(self, hitter, tflp, tool_capabilities, dir)
 			-- weapon wear
 			local weapon = hitter:get_wielded_item()
+			local punch_interval = tool_capabilities.full_punch_interval or 1.4
 			if weapon:get_definition().tool_capabilities ~= nil then
-				local wear = ( (weapon:get_definition().tool_capabilities.full_punch_interval or 1.4) / 75 ) * 9000
+				local wear = (punch_interval / 75) * 9000
 				weapon:add_wear(wear)
 				hitter:set_wielded_item(weapon)
 			end

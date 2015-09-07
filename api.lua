@@ -1,4 +1,4 @@
--- Mobs Api (5th September 2015)
+-- Mobs Api (7th September 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -110,24 +110,21 @@ function mobs:register_mob(name, def)
 			return (v.x ^ 2 + v.z ^ 2) ^ (0.5)
 		end,
 --[[
-		in_fov = function(self,pos)
+		in_fov = function(self, pos)
 			-- checks if POS is in self's FOV
 			local yaw = self.object:getyaw() + self.rotate
 			local vx = math.sin(yaw)
 			local vz = math.cos(yaw)
 			local ds = math.sqrt(vx ^ 2 + vz ^ 2)
 			local ps = math.sqrt(pos.x ^ 2 + pos.z ^ 2)
-			local d = { x = vx / ds, z = vz / ds }
-			local p = { x = pos.x / ps, z = pos.z / ps }
-			local an = ( d.x * p.x ) + ( d.z * p.z )
-			
-			a = math.deg( math.acos( an ) )
-			
-			if a > ( self.fov / 2 ) then
+			local d = {x = vx / ds, z = vz / ds}
+			local p = {x = pos.x / ps, z = pos.z / ps}
+			local an = (d.x * p.x) + (d.z * p.z)
+
+			if math.deg(math.acos(an)) > (self.fov / 2) then
 				return false
-			else
-				return true
 			end
+			return true
 		end,
 ]]
 		set_animation = function(self, type)
@@ -1628,7 +1625,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 
 	-- can eat/tame with item in hand
 	if follow_holding(self, clicker) then
---print ("mmm, tasty")
+
 		-- take item
 		if not minetest.setting_getbool("creative_mode") then
 			local item = clicker:get_wielded_item()
@@ -1638,9 +1635,17 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 
 		-- heal health
 		local hp = self.object:get_hp()
-		hp = math.min(hp + 4, self.hp_max)
-		self.object:set_hp(hp)
-		self.health = hp
+		--if hp < self.hp_max then
+			hp = hp + 4
+			if hp >= self.hp_max then
+				hp = self.hp_max
+				minetest.chat_send_player(clicker:get_player_name(),
+					self.name:split(":")[2]
+					.. " at full health")
+			end
+			self.object:set_hp(hp)
+			self.health = hp
+		--end
 
 		-- make children grow quicker
 		if self.child == true then

@@ -6,7 +6,7 @@ mobs:register_mob("mobs:mese_monster", {
 	passive = false,
 	damage = 3,
 	attack_type = "shoot",
-	shoot_interval = .5,
+	shoot_interval = 0.5,
 	arrow = "mobs:mese_arrow",
 	shoot_offset = 2,
 	hp_min = 10,
@@ -36,8 +36,8 @@ mobs:register_mob("mobs:mese_monster", {
 		{name = "default:mese_crystal_fragment",
 		chance = 1, min = 1, max = 9},
 	},
-	water_damage = 0,
-	lava_damage = 0,
+	water_damage = 1,
+	lava_damage = 1,
 	light_damage = 0,
 	animation = {
 		speed_normal = 15,
@@ -48,8 +48,8 @@ mobs:register_mob("mobs:mese_monster", {
 		walk_end = 38,
 		run_start = 40,
 		run_end = 63,
-		punch_start = 15, -- was 40
-		punch_end = 38, -- was 63
+		punch_start = 40,
+		punch_end = 63,
 	},
 })
 
@@ -65,16 +65,16 @@ mobs:register_arrow("mobs:mese_arrow", {
 	velocity = 6,
 
 	hit_player = function(self, player)
-		player:punch(self.object, 1.0,  {
+		player:punch(self.object, 1.0, {
 			full_punch_interval = 1.0,
-			damage_groups = {fleshy = 1},
+			damage_groups = {fleshy = 2},
 		}, 0)
 	end,
 
 	hit_mob = function(self, player)
-		player:punch(self.object, 1.0,  {
+		player:punch(self.object, 1.0, {
 			full_punch_interval = 1.0,
-			damage_groups = {fleshy = 1},
+			damage_groups = {fleshy = 2},
 		}, 0)
 	end,
 

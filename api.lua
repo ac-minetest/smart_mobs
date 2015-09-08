@@ -1,4 +1,4 @@
--- Mobs Api (7th September 2015)
+-- Mobs Api (8th September 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -183,8 +183,8 @@ function mobs:register_mob(name, def)
 		
 		on_step = function(self, dtime)
 
-			if self.type == "monster"
-			and peaceful_only then
+			if (self.type == "monster" and peaceful_only)
+			or not within_limits(self.object:getpos(), 0) then
 				self.object:remove()
 				return
 			end
@@ -195,7 +195,8 @@ function mobs:register_mob(name, def)
 				self.lifetimer = self.lifetimer - dtime
 				if self.lifetimer <= 0
 				and self.state ~= "attack" then
-					minetest.log("action","lifetimer expired, removed "..self.name)
+					minetest.log("action",
+						"lifetimer expired, removed "..self.name)
 					effect(self.object:getpos(), 15, "tnt_smoke.png")
 					self.object:remove()
 					return
@@ -1116,14 +1117,14 @@ end
 
 		get_staticdata = function(self)
 
--- remove mob when out of range unless tamed
-if mobs.remove and self.remove_ok and not self.tamed then
-	print ("REMOVED", self.remove_ok, self.name)
-	self.object:remove()
-end
-self.remove_ok = true
-self.attack = nil
-self.following = nil
+			-- remove mob when out of range unless tamed
+			if mobs.remove and self.remove_ok and not self.tamed then
+				print ("REMOVED", self.remove_ok, self.name)
+				self.object:remove()
+			end
+			self.remove_ok = true
+			self.attack = nil
+			self.following = nil
 
 			local tmp = {}
 			for _,stat in pairs(self) do
@@ -1328,8 +1329,9 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 			max_hear_distance = 16
 		})
 	end
-	-- if area protected then no blast damage
-	if minetest.is_protected(pos, "") then
+	-- if area protected or at map limits then no blast damage
+	if minetest.is_protected(pos, "")
+	or not within_limits(pos, radius) then
 		return
 	end
 	for z = -radius, radius do
@@ -1468,10 +1470,14 @@ function mobs:register_arrow(name, def)
 
 		on_step = function(self, dtime)
 			self.timer = (self.timer or 0) + 1
-			if self.timer > 150 then self.object:remove() return end
+			local pos = self.object:getpos()
+			if self.timer > 150
+			or not within_limits(pos, 0) then
+				self.object:remove()
+				return
+			end
 
 			local engage = 10 - (self.velocity / 2) -- clear entity before arrow becomes active
-			local pos = self.object:getpos()
 			local node = minetest.get_node_or_nil(self.object:getpos())
 			if node then node = node.name else node = "air" end
 
@@ -1524,7 +1530,7 @@ function mobs:register_egg(mob, desc, background, addegg)
 		inventory_image = invimg,
 		on_place = function(itemstack, placer, pointed_thing)
 			local pos = pointed_thing.above
-			if pointed_thing.above
+			if pos and within_limits(pos, 0)
 			and not minetest.is_protected(pos, placer:get_player_name()) then
 				pos.y = pos.y + 0.5
 				local mob = minetest.add_entity(pos, mob)
@@ -1619,7 +1625,7 @@ function follow_holding(self, clicker)
 end
 
 -- feeding, taming and breeding (thanks blert2112)
-function mobs:feed_tame(self, clicker, feed_count, breed)
+function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
 	if not self.follow then return false end
 
@@ -1661,9 +1667,11 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 				self.horny = true
 			end
 			self.gotten = false
-			self.tamed = true
-			if not self.owner or self.owner == "" then
-				self.owner = clicker:get_player_name()
+			if tame then
+				self.tamed = true
+				if not self.owner or self.owner == "" then
+					self.owner = clicker:get_player_name()
+				end
 			end
 
 			-- make sound when fed so many times
@@ -1678,4 +1686,17 @@ function mobs:feed_tame(self, clicker, feed_count, breed)
 	else
 		return false
 	end
+end
+
+-- check if within map limits (-30911 to 30927)
+function within_limits(pos, radius)
+	if  (pos.x - radius) > -30911
+	and (pos.x + radius) <  30927
+	and (pos.y - radius) > -30911
+	and (pos.y + radius) <  30927
+	and (pos.z - radius) > -30911
+	and (pos.z + radius) <  30927 then
+		return true -- within limits
+	end
+	return false -- beyond limits
 end

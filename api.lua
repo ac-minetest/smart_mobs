@@ -1690,12 +1690,12 @@ end
 
 -- check if within map limits (-30911 to 30927)
 function within_limits(pos, radius)
-	if  (pos.x - radius) > -30911
-	and (pos.x + radius) <  30927
-	and (pos.y - radius) > -30911
-	and (pos.y + radius) <  30927
-	and (pos.z - radius) > -30911
-	and (pos.z + radius) <  30927 then
+	if  (pos.x - radius) > -30913
+	and (pos.x + radius) <  30928
+	and (pos.y - radius) > -30913
+	and (pos.y + radius) <  30928
+	and (pos.z - radius) > -30913
+	and (pos.z + radius) <  30928 then
 		return true -- within limits
 	end
 	return false -- beyond limits

@@ -70,14 +70,14 @@ mobs:register_arrow("mobs:fireball", {
 		player:punch(self.object, 1.0, {
 			full_punch_interval = 1.0,
 			damage_groups = {fleshy = 8},
-		}, 0)
+		}, nil)
 	end,
 
 	hit_mob = function(self, player)
 		player:punch(self.object, 1.0, {
 			full_punch_interval = 1.0,
 			damage_groups = {fleshy = 8},
-		}, 0)
+		}, nil)
 	end,
 
 	-- node hit, bursts into flame

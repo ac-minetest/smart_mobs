@@ -1478,7 +1478,7 @@ function mobs:register_arrow(name, def)
 			end
 
 			local engage = 10 - (self.velocity / 2) -- clear entity before arrow becomes active
-			local node = minetest.get_node_or_nil(self.object:getpos())
+			local node = minetest.get_node_or_nil(pos)
 			if node then node = node.name else node = "air" end
 
 			if self.hit_node

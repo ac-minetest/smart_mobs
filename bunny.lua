@@ -43,7 +43,7 @@ mobs:register_mob("mobs:bunny", {
 	replace_what = {"farming:carrot_7", "farming:carrot_8", "farming_plus:carrot"},
 	replace_with = "air",
 	on_rightclick = function(self, clicker)
-		if not mobs:feed_tame(self, clicker, 4, true) then
+		if not mobs:feed_tame(self, clicker, 4, true, true) then
 			-- Monty Python tribute
 			local item = clicker:get_wielded_item()
 			if item:get_name() == "mobs:lava_orb" then

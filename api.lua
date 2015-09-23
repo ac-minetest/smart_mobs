@@ -1,4 +1,4 @@
--- Mobs Api (17th September 2015)
+-- Mobs Api (23rd September 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1479,25 +1479,26 @@ function mobs:register_arrow(name, def)
 				return
 			end
 
-			local engage = 10 - (self.velocity / 2) -- clear entity before arrow becomes active
-			local node = minetest.get_node_or_nil(pos)
-			if node then node = node.name else node = "air" end
+			if self.hit_node then
+				local node = minetest.get_node_or_nil(pos)
+				if node then node = node.name else node = "air" end
 
-			if self.hit_node
-			and minetest.registered_nodes[node]
-			and minetest.registered_nodes[node].walkable then
-				self.hit_node(self, pos, node)
-				if self.drop == true then
-					pos.y = pos.y + 1
-					self.lastpos = (self.lastpos or pos)
-					minetest.add_item(self.lastpos, self.object:get_luaentity().name)
+				if minetest.registered_nodes[node]
+				and minetest.registered_nodes[node].walkable then
+					self.hit_node(self, pos, node)
+					if self.drop == true then
+						pos.y = pos.y + 1
+						self.lastpos = (self.lastpos or pos)
+						minetest.add_item(self.lastpos, self.object:get_luaentity().name)
+					end
+					self.object:remove() ; -- print ("hit node")
+					return
 				end
-				self.object:remove() ; -- print ("hit node")
-				return
 			end
 
 			if (self.hit_player or self.hit_mob)
-			and self.timer > engage then
+			-- clear entity before arrow becomes active
+			and self.timer > (10 - (self.velocity / 2)) then
 				for _,player in pairs(minetest.get_objects_inside_radius(pos, 1.0)) do
 					if self.hit_player
 					and player:is_player() then

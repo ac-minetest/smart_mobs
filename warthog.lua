@@ -5,6 +5,7 @@ mobs:register_mob("mobs:pumba", {
 	type = "animal",
 	passive = false,
 	attack_type = "dogfight",
+	reach = 2,
 	damage = 2,
 	hp_min = 5,
 	hp_max = 15,

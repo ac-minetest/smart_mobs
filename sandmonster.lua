@@ -5,6 +5,7 @@ mobs:register_mob("mobs:sand_monster", {
 	type = "monster",
 	passive = false,
 	attack_type = "dogfight",
+	reach = 2,
 	damage = 1,
 	hp_min = 4,
 	hp_max = 20,

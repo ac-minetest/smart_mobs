@@ -5,6 +5,7 @@ mobs:register_mob("mobs:spider", {
 	type = "monster",
 	passive = false,
 	attack_type = "dogfight",
+	reach = 2,
 	damage = 3,
 	hp_min = 20,
 	hp_max = 40,

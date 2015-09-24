@@ -5,6 +5,7 @@ mobs:register_mob("mobs:lava_flan", {
 	type = "monster",
 	passive = false,
 	attack_type = "dogfight",
+	reach = 2,
 	damage = 3,
 	hp_min = 10,
 	hp_max = 35,

@@ -1521,7 +1521,10 @@ function mobs:register_egg(mob, desc, background, addegg)
 					ent.owner = placer:get_player_name()
 					ent.tamed = true
 				end
-				itemstack:take_item()
+				-- take item
+				if not minetest.setting_getbool("creative_mode") then
+					itemstack:take_item()
+				end
 			end
 			return itemstack
 		end,

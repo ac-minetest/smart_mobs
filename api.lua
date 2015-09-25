@@ -768,13 +768,11 @@ end
 		-- calculate distance from mob and enemy
 		local s = self.object:getpos()
 		local p = self.attack.player:getpos()
-		if p then
-			local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
-		end
+		if not p then p = s end
+		local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
 
 		-- stop attacking if no player or out of range
-		if not p
-		or dist > self.view_range
+		if dist > self.view_range
 		or not self.attack.player
 		or not self.attack.player:getpos()
 		or self.attack.player:get_hp() <= 0 then

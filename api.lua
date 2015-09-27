@@ -91,7 +91,7 @@ minetest.register_entity(name, {
 				})
 			end
 			self.state = "attack"
-			self.attack.player = player
+			self.attack = player
 		end
 	end,
 
@@ -772,20 +772,19 @@ end
 
 		-- calculate distance from mob and enemy
 		local s = self.object:getpos()
-		local p = self.attack.player:getpos()
-		if not p then p = s end
+		local p = self.attack:getpos() or s
 		local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
 
 		-- stop attacking if no player or out of range
 		if dist > self.view_range
-		or not self.attack.player
-		or not self.attack.player:getpos()
-		or self.attack.player:get_hp() <= 0 then
+		or not self.attack
+		or not self.attack:getpos()
+		or self.attack:get_hp() <= 0 then
 			--print(" ** stop attacking **", dist, self.view_range)
 			self.state = "stand"
 			self.set_velocity(self, 0)
 			self:set_animation("stand")
-			self.attack = {player = nil, dist = nil}
+			self.attack = nil
 			self.v_start = false
 			self.timer = 0
 			self.blinktimer = 0
@@ -945,7 +944,7 @@ end
 							})
 						end
 						-- punch player
-						self.attack.player:punch(self.object, 1.0,  {
+						self.attack:punch(self.object, 1.0,  {
 							full_punch_interval=1.0,
 							damage_groups = {fleshy=self.damage}
 						}, nil)
@@ -1088,8 +1087,9 @@ end
 			self.object:remove()
 		end
 		self.remove_ok = true
-		self.attack = {player = nil, dist = nil}
+		self.attack = nil
 		self.following = nil
+		self.state = "stand"
 
 		local tmp = {}
 		for _,stat in pairs(self) do

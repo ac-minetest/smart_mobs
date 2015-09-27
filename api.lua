@@ -1,4 +1,4 @@
--- Mobs Api (25th September 2015)
+-- Mobs Api (27th September 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -79,6 +79,7 @@ minetest.register_entity(name, {
 	gotten = false,
 	health = 0,
 	reach = def.reach or 3,
+	htimer = 0,
 
 	do_attack = function(self, player)
 		if self.state ~= "attack" then
@@ -103,7 +104,11 @@ minetest.register_entity(name, {
 		local yaw = self.object:getyaw() + self.rotate
 		local x = math.sin(yaw) * -v
 		local z = math.cos(yaw) * v
-		self.object:setvelocity({x = x, y = self.object:getvelocity().y, z = z})
+		self.object:setvelocity({
+			x = x,
+			y = self.object:getvelocity().y,
+			z = z}
+		)
 	end,
 
 	get_velocity = function(self)
@@ -204,7 +209,7 @@ minetest.register_entity(name, {
 			end
 		end
 
-		-- node replace check (chicken lays egg, cows eating grass etc)
+		-- node replace check (chicken lays egg, cow eats grass etc)
 		if self.replace_rate
 		and self.child == false
 		and math.random(1, self.replace_rate) == 1 then
@@ -223,11 +228,9 @@ minetest.register_entity(name, {
 		if not self.fly then
 			-- floating in water (or falling)
 			local pos = self.object:getpos()
-			local nod = minetest.get_node_or_nil(pos)
-			if nod then nod = nod.name else nod = "default:dirt" end
-			local nodef = minetest.registered_nodes[nod]
-
 			local v = self.object:getvelocity()
+
+			-- going up then apply gravity
 			if v.y > 0.1 then
 				self.object:setacceleration({
 					x = 0,
@@ -235,7 +238,9 @@ minetest.register_entity(name, {
 					z = 0
 				})
 			end
-			if nodef.groups.water then
+
+			-- in water then float up
+			if minetest.registered_nodes[node_ok(pos).name].groups.water then
 				if self.floats == 1 then
 					self.object:setacceleration({
 						x = 0,
@@ -244,6 +249,7 @@ minetest.register_entity(name, {
 					})
 				end
 			else
+				-- fall downwards
 				self.object:setacceleration({
 					x = 0,
 					y = self.fall_speed,
@@ -282,6 +288,7 @@ minetest.register_entity(name, {
 			self.timer = 0
 		end
 
+		-- mob plays random sound at times
 		if self.sounds.random
 		and math.random(1, 100) <= 1 then
 			minetest.sound_play(self.sounds.random, {
@@ -291,7 +298,9 @@ minetest.register_entity(name, {
 		end
 
 		local do_env_damage = function(self)
-
+if self.htimer > 0 then
+	self.htimer = self.htimer - 1
+end
 			local pos = self.object:getpos()
 			local tod = minetest.get_timeofday()
 
@@ -308,8 +317,7 @@ minetest.register_entity(name, {
 
 if self.water_damage ~= 0 or self.lava_damage ~= 0 then
 			pos.y = pos.y + self.collisionbox[2] -- foot level
-			local nod = minetest.get_node_or_nil(pos)
-			if not nod then return end ;  -- print ("standing in "..nod.name)
+			local nod = node_ok(pos, "air") -- print ("standing in "..nod.name)
 			local nodef = minetest.registered_nodes[nod.name]
 			pos.y = pos.y + 1
 
@@ -325,7 +333,8 @@ if self.water_damage ~= 0 or self.lava_damage ~= 0 then
 			if self.lava_damage ~= 0
 			and (nodef.groups.lava
 				or nod.name == "fire:basic_flame"
-				or nod.name == "xanadu:safe_fire") then
+				or nod.name == "xanadu:safe_fire"
+				or nod.name == "fire:eternal_flame") then
 				self.object:set_hp(self.object:get_hp() - self.lava_damage)
 				effect(pos, 5, "fire_basic_flame.png")
 				if check_for_death(self) then return end
@@ -340,40 +349,33 @@ end
 
 			local pos = self.object:getpos()
 			pos.y = (pos.y + self.collisionbox[2]) - 0.2
-			local nod = minetest.get_node_or_nil(pos)
+			local nod = node_ok(pos)
 --print ("standing on:", nod.name, pos.y)
-			if not nod
-			or not minetest.registered_nodes[nod.name]
-			or minetest.registered_nodes[nod.name].walkable == false then
+			if minetest.registered_nodes[nod.name].walkable == false then
 				return
 			end
 			if self.direction then
 				pos.y = pos.y + 0.5
-				local nod = minetest.get_node_or_nil({
+				local nod = node_ok({
 					x = pos.x + self.direction.x,
 					y = pos.y,
 					z = pos.z + self.direction.z
 				})
 --print ("in front:", nod.name, pos.y)
-				if nod and nod.name and
-				(nod.name ~= "air" 
-				or self.walk_chance == 0) then
-					local def = minetest.registered_items[nod.name]
-					if (def
-					and def.walkable
-					and not nod.name:find("fence"))
-					or self.walk_chance == 0 then
-						local v = self.object:getvelocity()
-						v.y = self.jump_height + 1
-						v.x = v.x * 2.2
-						v.z = v.z * 2.2
-						self.object:setvelocity(v)
-						if self.sounds.jump then
-							minetest.sound_play(self.sounds.jump, {
-								object = self.object,
-								max_hear_distance = self.sounds.distance
-							})
-						end
+				if nod.name ~= "air"
+				and minetest.registered_items[nod.name].walkable
+				and not nod.name:find("fence")
+				or self.walk_chance == 0 then
+				local v = self.object:getvelocity()
+					v.y = self.jump_height + 1
+					v.x = v.x * 2.2
+					v.z = v.z * 2.2
+					self.object:setvelocity(v)
+					if self.sounds.jump then
+						minetest.sound_play(self.sounds.jump, {
+							object = self.object,
+							max_hear_distance = self.sounds.distance
+						})
 					end
 				end
 			end
@@ -475,7 +477,8 @@ end
 			end
 		end
 
-		-- horny animal can mate for 40 seconds, afterwards horny animal cannot mate again for 200 seconds
+		-- horny animal can mate for 40 seconds,
+		-- afterwards horny animal cannot mate again for 200 seconds
 		if self.horny == true
 		and self.hornytimer < 240
 		and self.child == false then
@@ -486,7 +489,7 @@ end
 			end
 		end
 
-		-- if animal is child take 240 seconds before growing into adult
+		-- child take 240 seconds before growing into adult
 		if self.child == true then
 			self.hornytimer = self.hornytimer + 1
 			if self.hornytimer > 240 then
@@ -506,7 +509,7 @@ end
 			end
 		end
 
-		-- if animal is horny, find another same animal who is horny and mate
+		-- find another same animal who is also horny and mate
 		if self.horny == true
 		and self.hornytimer <= 40 then
 			local pos = self.object:getpos()
@@ -541,6 +544,8 @@ end
 				and ent.hornytimer <= 40 then
 					num = num + 1
 				end
+
+				-- found your mate? then have a baby
 				if num > 1 then
 					self.hornytimer = 41
 					ent.hornytimer = 41
@@ -612,7 +617,7 @@ end
 			end
 		end
 
-		-- follow player or mob
+		-- follow that thing
 		if self.following then
 			local s = self.object:getpos()
 			local p
@@ -639,7 +644,7 @@ end
 					self.object:setyaw(yaw)
 
 					-- anyone but standing npc's can move along
-					if dist > 3
+					if dist > self.reach
 					and self.order ~= "stand" then
 						if (self.jump
 						and self.get_velocity(self) <= 0.5
@@ -857,7 +862,7 @@ end
 			if self.fly
 			and dist > self.reach then
 
-				local nod = minetest.get_node_or_nil(s)
+				local nod = node_ok(s)
 				local p1 = s
 				local me_y = math.floor(p1.y)
 				local p2 = p
@@ -897,16 +902,6 @@ end
 			end
 			-- end fly bit
 
-			-- ignore enemy if out of range
-			if dist > self.view_range
-			or self.attack.player:get_hp() <= 0 then
-				self.state = "stand"
-				self.set_velocity(self, 0)
-				self.attack = {player = nil, dist = nil}
-				self:set_animation("stand")
-				return
-			end
-
 			local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 			yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
 			if p.x > s.x then
@@ -942,20 +937,18 @@ end
 					p2.y = p2.y + 1.5
 					s2.y = s2.y + 1.5
 					if minetest.line_of_sight(p2, s2) == true then
+						-- play attack sound
 						if self.sounds.attack then
 							minetest.sound_play(self.sounds.attack, {
 								object = self.object,
 								max_hear_distance = self.sounds.distance
 							})
 						end
+						-- punch player
 						self.attack.player:punch(self.object, 1.0,  {
 							full_punch_interval=1.0,
 							damage_groups = {fleshy=self.damage}
-						}, vec)
-						if self.attack.player:get_hp() <= 0 then
-							self.state = "stand"
-							self:set_animation("stand")
-						end
+						}, nil)
 					end
 				end
 			end
@@ -963,12 +956,6 @@ end
 		elseif self.attack_type == "shoot"
 		or (self.attack_type == "dogshoot" and dist > self.reach) then
 
-			local s = self.object:getpos()
-			local p = self.attack.player:getpos()
-			if not p then
-				self.state = "stand"
-				return
-			end
 			p.y = p.y - .5
 			s.y = s.y + .5
 			local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
@@ -987,8 +974,9 @@ end
 				self.timer = 0
 				self:set_animation("punch")
 
-				if self.sounds.attack then
-					minetest.sound_play(self.sounds.attack, {
+				-- play shoot attack sound
+				if self.sounds.shoot_attack then
+					minetest.sound_play(self.sounds.shoot_attack, {
 						object = self.object,
 						max_hear_distance = self.sounds.distance
 					})
@@ -1204,7 +1192,6 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light, inter
 			-- do not spawn if too many active entities in area
 			if active_object_count_wider > active_object_count
 			or not mobs.spawning_mobs[name] then
-			--or not pos then
 				return
 			end
 
@@ -1228,21 +1215,11 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light, inter
 			end
 
 			-- are we spawning inside a solid node?
-			local nod = minetest.get_node_or_nil(pos)
-			if not nod
-			or not nod.name
-			or not minetest.registered_nodes[nod.name]
-			or minetest.registered_nodes[nod.name].walkable == true then
+			if minetest.registered_nodes[node_ok(pos).name].walkable == true then
 				return
 			end
-
 			pos.y = pos.y + 1
-
-			nod = minetest.get_node_or_nil(pos)
-			if not nod
-			or not nod.name
-			or not minetest.registered_nodes[nod.name]
-			or minetest.registered_nodes[nod.name].walkable == true then
+			if minetest.registered_nodes[node_ok(pos).name].walkable == true then
 				return
 			end
 
@@ -1324,7 +1301,7 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		and data[vi] ~= c_obsidian
 		and data[vi] ~= c_brick
 		and data[vi] ~= c_chest then
-			local n = minetest.get_node(p).name
+			local n = node_ok(p).name
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 				-- if chest then drop items inside
 				if n == "default:chest"
@@ -1456,11 +1433,8 @@ function mobs:register_arrow(name, def)
 			end
 
 			if self.hit_node then
-				local node = minetest.get_node_or_nil(pos)
-				if node then node = node.name else node = "air" end
-
-				if minetest.registered_nodes[node]
-				and minetest.registered_nodes[node].walkable then
+				local node = node_ok(pos).name
+				if minetest.registered_nodes[node].walkable then
 					self.hit_node(self, pos, node)
 					if self.drop == true then
 						pos.y = pos.y + 1
@@ -1511,7 +1485,7 @@ function mobs:register_egg(mob, desc, background, addegg)
 			local pos = pointed_thing.above
 			if pos and within_limits(pos, 0)
 			and not minetest.is_protected(pos, placer:get_player_name()) then
-				pos.y = pos.y + 0.5
+				pos.y = pos.y + 1
 				local mob = minetest.add_entity(pos, mob)
 				local ent = mob:get_luaentity()
 				if ent.type ~= "monster" then
@@ -1519,7 +1493,7 @@ function mobs:register_egg(mob, desc, background, addegg)
 					ent.owner = placer:get_player_name()
 					ent.tamed = true
 				end
-				-- take item
+				-- if not in creative then take item
 				if not minetest.setting_getbool("creative_mode") then
 					itemstack:take_item()
 				end
@@ -1623,17 +1597,17 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
 		-- heal health
 		local hp = self.object:get_hp()
-		--if hp < self.hp_max then
-			hp = hp + 4
-			if hp >= self.hp_max then
-				hp = self.hp_max
-				minetest.chat_send_player(clicker:get_player_name(),
-					self.name:split(":")[2]
-					.. " at full health")
-			end
-			self.object:set_hp(hp)
-			self.health = hp
-		--end
+		hp = hp + 4
+		if hp >= self.hp_max
+		and self.htimer < 1 then
+			hp = self.hp_max
+			minetest.chat_send_player(clicker:get_player_name(),
+				self.name:split(":")[2]
+				.. " at full health (" .. tostring(hp) .. ")")
+			self.htimer = 5
+		end
+		self.object:set_hp(hp)
+		self.health = hp
 
 		-- make children grow quicker
 		if self.child == true then
@@ -1681,4 +1655,17 @@ function within_limits(pos, radius)
 		return true -- within limits
 	end
 	return false -- beyond limits
+end
+
+function node_ok(pos, fallback)
+	fallback = fallback or "default:dirt"
+	local node = minetest.get_node_or_nil(pos)
+	if not node then
+		return minetest.registered_nodes[fallback]
+	end
+	local nodef = minetest.registered_nodes[node.name]
+	if nodef then
+		return node
+	end
+	return minetest.registered_nodes[fallback]
 end

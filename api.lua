@@ -1361,7 +1361,7 @@ function check_for_death(self)
 			if obj then
 				obj:setvelocity({
 					x = math.random(-1, 1),
-					y = 5,
+					y = 6,
 					z = math.random(-1, 1)
 				})
 			end

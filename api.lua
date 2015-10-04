@@ -1003,6 +1003,7 @@ end
 		if self.type == "monster"
 		and peaceful_only then
 			self.object:remove()
+			return
 		end
 
 		-- load entity variables
@@ -1353,7 +1354,6 @@ function check_for_death(self)
 		return false
 	end
 	local pos = self.object:getpos()
-	self.object:remove()
 	local obj = nil
 	for _,drop in ipairs(self.drops) do
 		if math.random(1, drop.chance) == 1 then
@@ -1377,6 +1377,7 @@ function check_for_death(self)
 	if self.on_die then
 		self.on_die(self, pos)
 	end
+	self.object:remove()
 	return true
 end
 

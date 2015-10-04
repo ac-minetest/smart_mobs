@@ -263,7 +263,9 @@ minetest.register_entity(name, {
 					if d > 5 then
 						self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
 						effect(self.object:getpos(), 5, "tnt_smoke.png")
-						check_for_death(self)
+						if check_for_death(self) then
+							return
+						end
 					end
 					self.old_y = self.object:getpos().y
 				end

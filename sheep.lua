@@ -161,6 +161,7 @@ minetest.register_entity("mobs:sheep", {
 
 	self.timer = self.timer + dtime
 	if self.timer >= 1 then
+		self.timer = 0
 		self.object:setacceleration({
 			x = 0,
 			y = -10,

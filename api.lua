@@ -1,4 +1,4 @@
--- Mobs Api (27th September 2015)
+-- Mobs Api (4th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1085,6 +1085,7 @@ end
 		if mobs.remove and self.remove_ok and not self.tamed then
 			print ("REMOVED", self.remove_ok, self.name)
 			self.object:remove()
+			return
 		end
 		self.remove_ok = true
 		self.attack = nil

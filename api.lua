@@ -1,4 +1,4 @@
--- Mobs Api (4th October 2015)
+-- Mobs Api (5th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -318,8 +318,8 @@ end
 			end
 
 if self.water_damage ~= 0 or self.lava_damage ~= 0 then
-			pos.y = pos.y + self.collisionbox[2] -- foot level
-			local nod = node_ok(pos, "air") -- print ("standing in "..nod.name)
+			pos.y = (pos.y + self.collisionbox[2]) + 0.1 -- foot level
+			local nod = node_ok(pos, "air") ;  -- print ("standing in "..nod.name)
 			local nodef = minetest.registered_nodes[nod.name]
 			pos.y = pos.y + 1
 
@@ -839,7 +839,6 @@ end
 					entity_physics(pos, 3)
 					if minetest.find_node_near(pos, 1, {"group:water"})
 					or minetest.is_protected(pos, "") then
-						self.object:remove()
 						if self.sounds.explode ~= "" then
 							minetest.sound_play(self.sounds.explode, {
 								pos = pos,
@@ -847,12 +846,13 @@ end
 								max_hear_distance = 16
 							})
 						end
+						self.object:remove()
 						effect(pos, 15, "tnt_smoke.png", 5)
 						return
 					end
-					self.object:remove()
 					pos.y = pos.y - 1
 					mobs:explosion(pos, 2, 0, 1, self.sounds.explode)
+					self.object:remove()
 				end
 			end
 
@@ -1016,6 +1016,8 @@ end
 					self[_] = stat
 				end
 			end
+		else
+			return
 		end
 
 		-- select random texture, set model and size
@@ -1088,7 +1090,7 @@ end
 		if mobs.remove and self.remove_ok and not self.tamed then
 			print ("REMOVED", self.remove_ok, self.name)
 			self.object:remove()
-			return
+			return nil
 		end
 		self.remove_ok = true
 		self.attack = nil

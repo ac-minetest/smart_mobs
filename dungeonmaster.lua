@@ -37,7 +37,7 @@ mobs:register_mob("mobs:dungeon_master", {
 		chance = 4, min = 1, max = 1},
 		{name = "default:mese_crystal",
 		chance = 2, min = 1, max = 2},
-		{name = "default:diamond_block",
+		{name = "default:diamondblock",
 		chance = 30, min = 1, max = 1},
 	},
 	water_damage = 1,

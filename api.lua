@@ -2,6 +2,8 @@
 mobs = {}
 mobs.mod = "redo"
 
+local pi = math.pi
+
 -- Load settings
 local damage_enabled = minetest.setting_getbool("enable_damage")
 local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
@@ -335,7 +337,6 @@ if self.water_damage ~= 0 or self.lava_damage ~= 0 then
 			if self.lava_damage ~= 0
 			and (nodef.groups.lava
 				or nod.name == "fire:basic_flame"
-				or nod.name == "xanadu:safe_fire"
 				or nod.name == "fire:eternal_flame") then
 				self.object:set_hp(self.object:get_hp() - self.lava_damage)
 				effect(pos, 5, "fire_basic_flame.png")
@@ -639,9 +640,9 @@ end
 					self.following = nil
 				else
 					local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-					yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
+					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 					if p.x > s.x then
-						yaw = yaw + math.pi
+						yaw = yaw + pi
 					end
 					self.object:setyaw(yaw)
 
@@ -693,12 +694,12 @@ end
 				-- look at any players nearby, otherwise turn randomly
 				if lp ~= nil then
 					local vec = {x = lp.x - s.x, y = lp.y - s.y, z = lp.z - s.z}
-					yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
+					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 					if lp.x > s.x then
-						yaw = yaw + math.pi
+						yaw = yaw + pi
 					end
 				else
-					yaw = self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * math.pi)
+					yaw = self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi)
 				end
 				self.object:setyaw(yaw)
 			end
@@ -740,14 +741,14 @@ end
 			-- if water nearby then turn away
 			if lp then
 				local vec = {x = lp.x - s.x, y = lp.y - s.y, z = lp.z - s.z}
-				yaw = math.atan(vec.z / vec.x) + 3 * math.pi / 2 - self.rotate
+				yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
 				if lp.x > s.x then
-					yaw = yaw + math.pi
+					yaw = yaw + pi
 				end
 				self.object:setyaw(yaw)
 			-- otherwise randomly turn
 			elseif math.random(1, 100) <= 30 then
-				self.object:setyaw(self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * math.pi))
+				self.object:setyaw(self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi))
 			end
 
 			-- jump when walking comes to a halt
@@ -796,9 +797,9 @@ end
 		if self.attack_type == "explode" then
 
 			local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-			yaw = math.atan(vec.z / vec.x) + math.pi / 2 - self.rotate
+			yaw = math.atan(vec.z / vec.x) + pi / 2 - self.rotate
 			if p.x > s.x then
-				yaw = yaw + math.pi
+				yaw = yaw + pi
 			end
 			self.object:setyaw(yaw)
 
@@ -904,9 +905,9 @@ end
 			-- end fly bit
 
 			local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-			yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
+			yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 			if p.x > s.x then
-				yaw = yaw + math.pi
+				yaw = yaw + pi
 			end
 			self.object:setyaw(yaw)
 
@@ -962,9 +963,9 @@ end
 			local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
 
 			local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
-			yaw = (math.atan(vec.z / vec.x) + math.pi / 2) - self.rotate
+			yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 			if p.x > s.x then
-				yaw = yaw + math.pi
+				yaw = yaw + pi
 			end
 			self.object:setyaw(yaw)
 			self.set_velocity(self, 0)
@@ -1071,10 +1072,10 @@ end
 
 		self.object:set_hp(self.health)
 		self.object:set_armor_groups({fleshy = self.armor})
-		self.state = "stand"
-		self.following = nil
+		--self.state = "stand"
+		--self.following = nil
 		self.old_y = self.object:getpos().y
-		self.object:setyaw(math.random(1, 360) / 180 * math.pi)
+		self.object:setyaw(math.random(1, 360) / 180 * pi)
 		self.sounds.distance = (self.sounds.distance or 10)
 		self.textures = textures
 		self.mesh = mesh
@@ -1413,7 +1414,7 @@ function entity_physics(pos, radius)
 		if obj_vel ~= nil then
 			obj:setvelocity(calc_velocity(pos, obj_pos, obj_vel, radius * 10))
 		end
-		local damage = (4 / dist) * radius
+		local damage = math.floor((4 / dist) * radius)
 		obj:set_hp(obj:get_hp() - damage)
 	end
 end
@@ -1568,7 +1569,7 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 	end
 end
 
--- follow what I'm holding ?
+-- should mob follow what I'm holding ?
 function follow_holding(self, clicker)
 	local item = clicker:get_wielded_item()
 	local t = type(self.follow)

@@ -1528,6 +1528,7 @@ function mobs:register_arrow(name, def)
 						return
 					end
 					if self.hit_mob
+					and player:get_luaentity()
 					and player:get_luaentity().name ~= self.object:get_luaentity().name
 					and player:get_luaentity().name ~= "__builtin:item"
 					and player:get_luaentity().name ~= "gauges:hp_bar"

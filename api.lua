@@ -1,4 +1,4 @@
--- Mobs Api (5th October 2015)
+-- Mobs Api (12th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1115,7 +1115,7 @@ end
 		local weapon = hitter:get_wielded_item()
 		local punch_interval = tool_capabilities.full_punch_interval or 1.4
 		if weapon:get_definition().tool_capabilities ~= nil then
-			local wear = (punch_interval / 75) * 9000
+			local wear = math.floor((punch_interval / 75) * 9000)
 			weapon:add_wear(wear)
 			hitter:set_wielded_item(weapon)
 		end
@@ -1152,13 +1152,17 @@ end
 			local kb = self.knock_back
 			local r = self.recovery_time
 			local v = self.object:getvelocity()
-			if tflp < tool_capabilities.full_punch_interval then
+			if tflp < punch_interval then
 				if kb > 0 then
-					kb = kb * ( tflp / tool_capabilities.full_punch_interval )
+					kb = kb * (tflp / punch_interval)
 				end
-				r = r * ( tflp / tool_capabilities.full_punch_interval )
+				r = r * (tflp / punch_interval)
 			end
-			self.object:setvelocity({x = dir.x * kb,y = 0,z = dir.z * kb})
+			self.object:setvelocity({
+				x = dir.x * kb,
+				y = 0,
+				z = dir.z * kb
+			})
 			self.pause_timer = r
 		end
 

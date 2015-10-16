@@ -102,6 +102,66 @@ local set_animation2 = function(self, type)
 	end
 end
 
+-- particle effects
+local function effect(pos, amount, texture, max_size)
+	minetest.add_particlespawner({
+		amount = amount,
+		time = 0.25,
+		minpos = pos,
+		maxpos = pos,
+		minvel = {x = -0, y = -2, z = -0},
+		maxvel = {x = 2,  y = 2,  z = 2},
+		minacc = {x = -4, y = -4, z = -4},
+		maxacc = {x = 4, y = 4, z = 4},
+		minexptime = 0.1,
+		maxexptime = 1,
+		minsize = 0.5,
+		maxsize = (max_size or 1),
+		texture = texture,
+	})
+end
+
+-- on mob death drop items
+local function check_for_death(self)
+	local hp = self.object:get_hp()
+	if hp > 0 then
+		self.health = hp
+		if self.sounds.damage ~= nil then
+			minetest.sound_play(self.sounds.damage,{
+				object = self.object,
+				max_hear_distance = self.sounds.distance
+			})
+		end
+		return false
+	end
+	local pos = self.object:getpos()
+	local obj = nil
+	for _,drop in ipairs(self.drops) do
+		if math.random(1, drop.chance) == 1 then
+			obj = minetest.add_item(pos,
+				ItemStack(drop.name.." "..math.random(drop.min, drop.max)))
+			if obj then
+				obj:setvelocity({
+					x = math.random(-1, 1),
+					y = 6,
+					z = math.random(-1, 1)
+				})
+			end
+		end
+	end
+	if self.sounds.death ~= nil then
+		minetest.sound_play(self.sounds.death,{
+			object = self.object,
+			max_hear_distance = self.sounds.distance
+		})
+	end
+	if self.on_die then
+		self.on_die(self, pos)
+	end
+	self.object:remove()
+	return true
+end
+
 local do_env_damage = function(self)
 
 	-- feed/tame text timer
@@ -189,7 +249,7 @@ local do_jump = function(self)
 end
 
 local in_fov = function(self, pos)
-	-- checks if POS is in mobs field of view
+	-- check if POS is in mobs field of view
 	local yaw = self.object:getyaw() + self.rotate
 	local vx = math.sin(yaw)
 	local vz = math.cos(yaw)
@@ -204,68 +264,8 @@ local in_fov = function(self, pos)
 	return true
 end
 
--- particle effects
-function effect(pos, amount, texture, max_size)
-	minetest.add_particlespawner({
-		amount = amount,
-		time = 0.25,
-		minpos = pos,
-		maxpos = pos,
-		minvel = {x = -0, y = -2, z = -0},
-		maxvel = {x = 2,  y = 2,  z = 2},
-		minacc = {x = -4, y = -4, z = -4},
-		maxacc = {x = 4, y = 4, z = 4},
-		minexptime = 0.1,
-		maxexptime = 1,
-		minsize = 0.5,
-		maxsize = (max_size or 1),
-		texture = texture,
-	})
-end
-
--- on mob death drop items
-function check_for_death(self)
-	local hp = self.object:get_hp()
-	if hp > 0 then
-		self.health = hp
-		if self.sounds.damage ~= nil then
-			minetest.sound_play(self.sounds.damage,{
-				object = self.object,
-				max_hear_distance = self.sounds.distance
-			})
-		end
-		return false
-	end
-	local pos = self.object:getpos()
-	local obj = nil
-	for _,drop in ipairs(self.drops) do
-		if math.random(1, drop.chance) == 1 then
-			obj = minetest.add_item(pos,
-				ItemStack(drop.name.." "..math.random(drop.min, drop.max)))
-			if obj then
-				obj:setvelocity({
-					x = math.random(-1, 1),
-					y = 6,
-					z = math.random(-1, 1)
-				})
-			end
-		end
-	end
-	if self.sounds.death ~= nil then
-		minetest.sound_play(self.sounds.death,{
-			object = self.object,
-			max_hear_distance = self.sounds.distance
-		})
-	end
-	if self.on_die then
-		self.on_die(self, pos)
-	end
-	self.object:remove()
-	return true
-end
-
 -- from TNT mod
-function calc_velocity(pos1, pos2, old_vel, power)
+local function calc_velocity(pos1, pos2, old_vel, power)
 	local vel = vector.direction(pos1, pos2)
 	vel = vector.normalize(vel)
 	vel = vector.multiply(vel, power)
@@ -277,7 +277,7 @@ function calc_velocity(pos1, pos2, old_vel, power)
 end
 
 -- modified from TNT mod
-function entity_physics(pos, radius)
+local function entity_physics(pos, radius)
 	radius = radius * 2
 	local objs = minetest.get_objects_inside_radius(pos, radius)
 	local obj_pos, obj_vel, dist
@@ -294,7 +294,7 @@ function entity_physics(pos, radius)
 end
 
 -- check if within map limits (-30911 to 30927)
-function within_limits(pos, radius)
+local function within_limits(pos, radius)
 	if  (pos.x - radius) > -30913
 	and (pos.x + radius) <  30928
 	and (pos.y - radius) > -30913
@@ -321,7 +321,7 @@ function node_ok(pos, fallback)
 end
 
 -- should mob follow what I'm holding ?
-function follow_holding(self, clicker)
+local function follow_holding(self, clicker)
 	local item = clicker:get_wielded_item()
 	local t = type(self.follow)
 

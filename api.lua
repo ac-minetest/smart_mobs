@@ -449,6 +449,21 @@ local function breed(self)
 	end
 end
 
+local function replace(self, pos)
+	if self.replace_rate
+	and self.child == false
+	and math.random(1, self.replace_rate) == 1 then
+		local pos = self.object:getpos()
+		pos.y = pos.y + self.replace_offset
+		-- print ("replace node = ".. minetest.get_node(pos).name, pos.y)
+		if self.replace_what
+		and self.object:getvelocity().y == 0
+		and #minetest.find_nodes_in_area(pos, pos, self.replace_what) > 0 then
+			minetest.set_node(pos, {name = self.replace_with})
+		end
+	end
+end
+
 -- register mob function
 
 function mobs:register_mob(name, def)
@@ -528,9 +543,12 @@ minetest.register_entity(name, {
 
 	on_step = function(self, dtime)
 
+		local pos = self.object:getpos()
+		local yaw = 0
+
 		-- remove monsters if playing on peaceful
 		if (self.type == "monster" and peaceful_only)
-		or not within_limits(self.object:getpos(), 0) then
+		or not within_limits(pos, 0) then
 			self.object:remove()
 			return
 		end
@@ -543,31 +561,17 @@ minetest.register_entity(name, {
 			and self.state ~= "attack" then
 				minetest.log("action",
 					"lifetimer expired, removed "..self.name)
-				effect(self.object:getpos(), 15, "tnt_smoke.png")
+				effect(pos, 15, "tnt_smoke.png")
 				self.object:remove()
 				return
 			end
 		end
 
-		-- node replace check (chicken lays egg, cow eats grass etc)
-		if self.replace_rate
-		and self.child == false
-		and math.random(1, self.replace_rate) == 1 then
-			local pos = self.object:getpos()
-			pos.y = pos.y + self.replace_offset
-			-- print ("replace node = ".. minetest.get_node(pos).name, pos.y)
-			if self.replace_what
-			and self.object:getvelocity().y == 0
-			and #minetest.find_nodes_in_area(pos, pos, self.replace_what) > 0 then
-				minetest.set_node(pos, {name = self.replace_with})
-			end
-		end
-
-		local yaw = 0
+		-- node replace check (chicken lays egg, cow eats grass etc.)
+		replace(self, pos)
 
 		if not self.fly then
 			-- floating in water (or falling)
-			local pos = self.object:getpos()
 			local v = self.object:getvelocity()
 
 			-- going up then apply gravity
@@ -599,10 +603,10 @@ minetest.register_entity(name, {
 				-- fall damage
 				if self.fall_damage == 1
 				and self.object:getvelocity().y == 0 then
-					local d = (self.old_y or 0) - self.object:getpos().y
+					local d = self.old_y - self.object:getpos().y
 					if d > 5 then
 						self.object:set_hp(self.object:get_hp() - math.floor(d - 5))
-						effect(self.object:getpos(), 5, "tnt_smoke.png")
+						effect(pos, 5, "tnt_smoke.png")
 						if check_for_death(self) then
 							return
 						end

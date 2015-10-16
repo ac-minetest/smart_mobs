@@ -1,4 +1,4 @@
--- Mobs Api (14th October 2015)
+-- Mobs Api (16th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1349,6 +1349,14 @@ mobs.spawning_mobs = {}
 
 function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light, interval, chance, active_object_count, min_height, max_height)
 	mobs.spawning_mobs[name] = true
+
+	-- chance override in minetest.conf for registered mob
+	local new_chance = tonumber(minetest.setting_get(name .. "_chance"))
+	if new_chance ~= nil then
+		chance = new_chance
+		print ("[Mobs Redo] Chance setting for " .. name .. " is now " .. chance)
+	end
+
 	minetest.register_abm({
 		nodenames = nodes,
 		neighbors = neighbors,

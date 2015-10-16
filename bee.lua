@@ -61,12 +61,14 @@ minetest.register_node("mobs:beehive", {
 	paramtype = "light",
 	sunlight_propagates = true,
 	walkable = true,
-	groups = {fleshy = 3, dig_immediate = 3},
+	groups = {oddly_breakable_by_hand = 2},
 	sounds = default.node_sound_defaults(),
 	after_place_node = function(pos, placer, itemstack)
 		if placer:is_player() then
 			minetest.set_node(pos, {name = "mobs:beehive", param2 = 1})
-			minetest.add_entity(pos, "mobs:bee")
+			if math.random(1, 5) == 1 then
+				minetest.add_entity(pos, "mobs:bee")
+			end
 		end
 	end,
 	

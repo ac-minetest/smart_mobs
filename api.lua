@@ -1,4 +1,4 @@
--- Mobs Api (12th October 2015)
+-- Mobs Api (14th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -342,6 +342,113 @@ function follow_holding(self, clicker)
 	return false
 end
 
+local function breed(self)
+	-- horny animal can mate for 40 seconds,
+	-- afterwards horny animal cannot mate again for 200 seconds
+	if self.horny == true
+	and self.hornytimer < 240
+	and self.child == false then
+		self.hornytimer = self.hornytimer + 1
+		if self.hornytimer >= 240 then
+			self.hornytimer = 0
+			self.horny = false
+		end
+	end
+
+	-- child take 240 seconds before growing into adult
+	if self.child == true then
+		self.hornytimer = self.hornytimer + 1
+		if self.hornytimer > 240 then
+			self.child = false
+			self.hornytimer = 0
+			self.object:set_properties({
+				textures = self.base_texture,
+				mesh = self.base_mesh,
+				visual_size = self.base_size,
+				collisionbox = self.base_colbox,
+			})
+			-- jump when grown so not to fall into ground
+			local v = self.object:getvelocity()
+			v.x = 0
+			v.y = self.jump_height
+			v.z = 0
+			self.object:setvelocity(v)
+		end
+	end
+
+	-- find another same animal who is also horny and mate
+	if self.horny == true
+	and self.hornytimer <= 40 then
+		local pos = self.object:getpos()
+		effect({x = pos.x, y = pos.y + 1, z = pos.z}, 4, "heart.png")
+		local ents = minetest.get_objects_inside_radius(pos, self.view_range)
+		local num = 0
+		local ent = nil
+		for i,obj in ipairs(ents) do
+			ent = obj:get_luaentity()
+
+			-- check for same animal with different colour
+			local canmate = false
+			if ent then
+				if ent.name == self.name then
+					canmate = true
+				else
+					local entname = string.split(ent.name,":")
+					local selfname = string.split(self.name,":")
+					if entname[1] == selfname[1] then
+						entname = string.split(entname[2],"_")
+						selfname = string.split(selfname[2],"_")
+						if entname[1] == selfname[1] then
+							canmate = true
+						end
+					end
+				end
+			end
+
+			if ent
+			and canmate == true
+			and ent.horny == true
+			and ent.hornytimer <= 40 then
+				num = num + 1
+			end
+
+			-- found your mate? then have a baby
+			if num > 1 then
+				self.hornytimer = 41
+				ent.hornytimer = 41
+				minetest.after(7, function(dtime)
+					local mob = minetest.add_entity(pos, self.name)
+					local ent2 = mob:get_luaentity()
+					local textures = self.base_texture
+					if self.child_texture then
+						textures = self.child_texture[1]
+					end
+					mob:set_properties({
+						textures = textures,
+						visual_size = {
+							x = self.base_size.x / 2,
+							y = self.base_size.y / 2
+						},
+						collisionbox = {
+							self.base_colbox[1] / 2,
+							self.base_colbox[2] / 2,
+							self.base_colbox[3] / 2,
+							self.base_colbox[4] / 2,
+							self.base_colbox[5] / 2,
+							self.base_colbox[6] / 2
+						},
+					})
+					ent2.child = true
+					ent2.tamed = true
+					ent2.owner = self.owner
+				end)
+				num = 0
+				break
+			end
+		end
+	end
+end
+
 -- register mob function
 
 function mobs:register_mob(name, def)
@@ -417,6 +524,7 @@ minetest.register_entity(name, {
 	health = 0,
 	reach = def.reach or 3,
 	htimer = 0,
+	child_texture = def.child_texture,
 
 	on_step = function(self, dtime)
 
@@ -627,110 +735,8 @@ minetest.register_entity(name, {
 			end
 		end
 
-		-- horny animal can mate for 40 seconds,
-		-- afterwards horny animal cannot mate again for 200 seconds
-		if self.horny == true
-		and self.hornytimer < 240
-		and self.child == false then
-			self.hornytimer = self.hornytimer + 1
-			if self.hornytimer >= 240 then
-				self.hornytimer = 0
-				self.horny = false
-			end
-		end
-
-		-- child take 240 seconds before growing into adult
-		if self.child == true then
-			self.hornytimer = self.hornytimer + 1
-			if self.hornytimer > 240 then
-				self.child = false
-				self.hornytimer = 0
-				self.object:set_properties({
-					textures = self.base_texture,
-					mesh = self.base_mesh,
-					visual_size = self.base_size,
-					collisionbox = self.base_colbox,
-				})
-				-- jump when grown so not to fall into ground
-				local v = self.object:getvelocity()
-				v.x = 0
-				v.y = self.jump_height
-				v.z = 0
-				self.object:setvelocity(v)
-			end
-		end
-
-		-- find another same animal who is also horny and mate
-		if self.horny == true
-		and self.hornytimer <= 40 then
-			local pos = self.object:getpos()
-			effect({x = pos.x, y = pos.y + 1, z = pos.z}, 4, "heart.png")
-			local ents = minetest.get_objects_inside_radius(pos, self.view_range)
-			local num = 0
-			local ent = nil
-			for i,obj in ipairs(ents) do
-				ent = obj:get_luaentity()
-
-				-- check for same animal with different colour
-				local canmate = false
-				if ent then
-					if ent.name == self.name then
-						canmate = true
-					else
-						local entname = string.split(ent.name,":")
-						local selfname = string.split(self.name,":")
-						if entname[1] == selfname[1] then
-							entname = string.split(entname[2],"_")
-							selfname = string.split(selfname[2],"_")
-							if entname[1] == selfname[1] then
-								canmate = true
-							end
-						end
-					end
-				end
-
-				if ent
-				and canmate == true
-				and ent.horny == true
-				and ent.hornytimer <= 40 then
-					num = num + 1
-				end
-
-				-- found your mate? then have a baby
-				if num > 1 then
-					self.hornytimer = 41
-					ent.hornytimer = 41
-					minetest.after(7, function(dtime)
-						local mob = minetest.add_entity(pos, self.name)
-						local ent2 = mob:get_luaentity()
-						local textures = self.base_texture
-						if def.child_texture then
-							textures = def.child_texture[1]
-						end
-						mob:set_properties({
-							textures = textures,
-							visual_size = {
-								x = self.base_size.x / 2,
-								y = self.base_size.y / 2
-							},
-							collisionbox = {
-								self.base_colbox[1] / 2,
-								self.base_colbox[2] / 2,
-								self.base_colbox[3] / 2,
-								self.base_colbox[4] / 2,
-								self.base_colbox[5] / 2,
-								self.base_colbox[6] / 2
-							},
-						})
-						ent2.child = true
-						ent2.tamed = true
-						ent2.owner = self.owner
-					end)
-					num = 0
-					break
-				end
-			end
-		end
+		-- breed mobs and grow children
+		breed(self)
 
 		-- find player to follow
 		if (self.follow ~= ""
@@ -1140,9 +1146,9 @@ minetest.register_entity(name, {
 				local v = obj:get_luaentity().velocity
 				 -- offset makes shoot aim accurate
 				vec.y = vec.y + self.shoot_offset
-				vec.x = vec.x *v / amount
-				vec.y = vec.y *v / amount
-				vec.z = vec.z *v / amount
+				vec.x = vec.x * v / amount
+				vec.y = vec.y * v / amount
+				vec.z = vec.z * v / amount
 				obj:setvelocity(vec)
 			end
 		end
@@ -1493,13 +1499,14 @@ function mobs:register_arrow(name, def)
 		hit_mob = def.hit_mob,
 		drop = def.drop or false,
 		collisionbox = {0, 0, 0, 0, 0, 0}, -- remove box around arrows
+		timer = 0,
 
 		on_step = function(self, dtime)
-			self.timer = (self.timer or 0) + 1
+			self.timer = self.timer + 1
 			local pos = self.object:getpos()
 			if self.timer > 150
 			or not within_limits(pos, 0) then
-				self.object:remove()
+				self.object:remove() ; -- print ("removed arrow")
 				return
 			end
 
@@ -1518,7 +1525,7 @@ function mobs:register_arrow(name, def)
 			end
 
 			if (self.hit_player or self.hit_mob)
-			-- clear entity before arrow becomes active
+			-- clear mob entity before arrow becomes active
 			and self.timer > (10 - (self.velocity / 2)) then
 				for _,player in pairs(minetest.get_objects_inside_radius(pos, 1.0)) do
 					if self.hit_player

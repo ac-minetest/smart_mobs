@@ -1,4 +1,4 @@
--- Mobs Api (16th October 2015)
+-- Mobs Api (17th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -121,25 +121,31 @@ local function effect(pos, amount, texture, max_size)
 	})
 end
 
--- on mob death drop items
 local function check_for_death(self)
+
+	local pos = self.object:getpos()
 	local hp = self.object:get_hp()
+
+	-- still got some health? play hurt sound
 	if hp > 0 then
 		self.health = hp
-		if self.sounds.damage ~= nil then
+		if self.sounds.damage then
 			minetest.sound_play(self.sounds.damage,{
-				object = self.object,
+				pos = pos,
+				gain = 1.0,
 				max_hear_distance = self.sounds.distance
 			})
 		end
 		return false
 	end
-	local pos = self.object:getpos()
-	local obj = nil
+
+	-- drop items when dead
+	local obj
 	for _,drop in ipairs(self.drops) do
 		if math.random(1, drop.chance) == 1 then
 			obj = minetest.add_item(pos,
-				ItemStack(drop.name.." "..math.random(drop.min, drop.max)))
+				ItemStack(drop.name .. " "
+					.. math.random(drop.min, drop.max)))
 			if obj then
 				obj:setvelocity({
 					x = math.random(-1, 1),
@@ -149,22 +155,28 @@ local function check_for_death(self)
 			end
 		end
 	end
-	if self.sounds.death ~= nil then
+
+	-- play death sound
+	if self.sounds.death then
 		minetest.sound_play(self.sounds.death,{
-			object = self.object,
+			pos = pos,
+			gain = 1.0,
 			max_hear_distance = self.sounds.distance
 		})
 	end
+
+	-- execute custom death function
 	if self.on_die then
 		self.on_die(self, pos)
 	end
+
 	self.object:remove()
 	return true
 end
 
 local do_env_damage = function(self)
 
-	-- feed/tame text timer
+	-- feed/tame text timer (so mob full messages dont spam chat)
 	if self.htimer > 0 then
 		self.htimer = self.htimer - 1
 	end

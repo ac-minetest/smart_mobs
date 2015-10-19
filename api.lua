@@ -1,4 +1,4 @@
--- Mobs Api (18th October 2015)
+-- Mobs Api (19th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -13,7 +13,7 @@ mobs.remove = minetest.setting_getbool("remove_far_mobs")
 
 local pi = math.pi
 
-local do_attack = function(self, player)
+do_attack = function(self, player)
 
 	if self.state ~= "attack" then
 
@@ -30,7 +30,7 @@ local do_attack = function(self, player)
 	end
 end
 
-local set_velocity = function(self, v)
+set_velocity = function(self, v)
 
 	v = (v or 0)
 
@@ -50,13 +50,13 @@ local set_velocity = function(self, v)
 	})
 end
 
-local get_velocity = function(self)
+get_velocity = function(self)
 
 	local v = self.object:getvelocity()
 	return (v.x ^ 2 + v.z ^ 2) ^ (0.5)
 end
 
-local set_animation2 = function(self, type)
+set_animation = function(self, type)
 
 	if not self.animation then
 		return
@@ -115,7 +115,7 @@ local set_animation2 = function(self, type)
 end
 
 -- particle effects
-local function effect(pos, amount, texture, max_size)
+function effect(pos, amount, texture, max_size)
 
 	minetest.add_particlespawner({
 		amount = amount,
@@ -134,7 +134,7 @@ local function effect(pos, amount, texture, max_size)
 	})
 end
 
-local function check_for_death(self)
+function check_for_death(self)
 
 	-- return if no change
 	local hp = self.object:get_hp()
@@ -193,7 +193,7 @@ local function check_for_death(self)
 end
 
 -- check if within map limits (-30911 to 30927)
-local function within_limits(pos, radius)
+function within_limits(pos, radius)
 
 	if  (pos.x - radius) > -30913
 	and (pos.x + radius) <  30928
@@ -207,7 +207,7 @@ local function within_limits(pos, radius)
 	return false -- beyond limits
 end
 
-local do_env_damage = function(self)
+do_env_damage = function(self)
 
 	-- feed/tame text timer (so mob full messages dont spam chat)
 	if self.htimer > 0 then
@@ -259,7 +259,7 @@ local do_env_damage = function(self)
 	check_for_death(self)
 end
 
-local do_jump = function(self)
+do_jump = function(self)
 
 	if self.fly then
 		return
@@ -307,7 +307,7 @@ local do_jump = function(self)
 	end
 end
 
-local in_fov = function(self, pos)
+in_fov = function(self, pos)
 
 	-- check if POS is in mobs field of view
 	local yaw = self.object:getyaw() + self.rotate
@@ -327,7 +327,7 @@ local in_fov = function(self, pos)
 end
 
 -- modified from TNT mod
-local function entity_physics(pos, radius)
+function entity_physics(pos, radius)
 
 	radius = radius * 2
 
@@ -363,7 +363,7 @@ function node_ok(pos, fallback)
 end
 
 -- should mob follow what I'm holding ?
-local function follow_holding(self, clicker)
+function follow_holding(self, clicker)
 
 	local item = clicker:get_wielded_item()
 	local t = type(self.follow)
@@ -492,7 +492,7 @@ local function breed(self)
 	end
 end
 
-local function replace(self, pos)
+function replace(self, pos)
 
 	if self.replace_rate
 	and self.child == false
@@ -862,11 +862,11 @@ minetest.register_entity(name, {
 						set_velocity(self, self.walk_velocity)
 						if self.walk_chance ~= 0 then
 							--self:set_animation("walk")
-							set_animation2(self, "walk")
+							set_animation(self, "walk")
 						end
 					else
 						set_velocity(self, 0)
-						set_animation2(self, "stand")
+						set_animation(self, "stand")
 					end
 					return
 				end
@@ -904,20 +904,20 @@ minetest.register_entity(name, {
 			end
 
 			set_velocity(self, 0)
-			set_animation2(self, "stand")
+			set_animation(self, "stand")
 
 			-- npc's ordered to stand stay standing
 			if self.type == "npc"
 			and self.order == "stand" then
 				set_velocity(self, 0)
 				self.state = "stand"
-				set_animation2(self, "stand")
+				set_animation(self, "stand")
 			else
 				if self.walk_chance ~= 0
 				and math.random(1, 100) <= self.walk_chance then
 					set_velocity(self, self.walk_velocity)
 					self.state = "walk"
-					set_animation2(self, "walk")
+					set_animation(self, "walk")
 				end
 			end
 
@@ -933,7 +933,7 @@ minetest.register_entity(name, {
 				set_velocity(self, 0)
 				-- change to undefined state so nothing more happens
 				self.state = "flop"
-				set_animation2(self, "stand")
+				set_animation(self, "stand")
 				return
 			end
 
@@ -962,11 +962,11 @@ minetest.register_entity(name, {
 			end
 
 			set_velocity(self, self.walk_velocity)
-			set_animation2(self, "walk")
+			set_animation(self, "walk")
 			if math.random(1, 100) <= 30 then
 				set_velocity(self, 0)
 				self.state = "stand"
-				set_animation2(self, "stand")
+				set_animation(self, "stand")
 			end
 
 		-- attack routines (explode, dogfight, shoot, dogshoot)
@@ -985,7 +985,7 @@ minetest.register_entity(name, {
 			--print(" ** stop attacking **", dist, self.view_range)
 			self.state = "stand"
 			set_velocity(self, 0)
-			set_animation2(self, "stand")
+			set_animation(self, "stand")
 			self.attack = nil
 			self.v_start = false
 			self.timer = 0
@@ -1019,7 +1019,7 @@ minetest.register_entity(name, {
 					end
 					set_velocity(self, self.run_velocity)
 				end
-				set_animation2(self, "run")
+				set_animation(self, "run")
 			else
 				set_velocity(self, 0)
 				self.timer = self.timer + dtime
@@ -1127,10 +1127,10 @@ minetest.register_entity(name, {
 					do_jump(self)
 				end
 				set_velocity(self, self.run_velocity)
-				set_animation2(self, "run")
+				set_animation(self, "run")
 			else
 				set_velocity(self, 0)
-				set_animation2(self, "punch")
+				set_animation(self, "punch")
 				if self.timer > 1 then
 					self.timer = 0
 					local p2 = p
@@ -1173,7 +1173,7 @@ minetest.register_entity(name, {
 			and self.timer > self.shoot_interval
 			and math.random(1, 100) <= 60 then
 				self.timer = 0
-				set_animation2(self, "punch")
+				set_animation(self, "punch")
 
 				-- play shoot attack sound
 				if self.sounds.shoot_attack then

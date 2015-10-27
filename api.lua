@@ -431,7 +431,7 @@ local function breed(self)
 		local ents = minetest.get_objects_inside_radius(pos, 3)
 		local num = 0
 		local ent = nil
-		for i,obj in ipairs(ents) do
+		for i, obj in ipairs(ents) do
 			ent = obj:get_luaentity()
 
 			-- check for same animal with different colour
@@ -463,6 +463,7 @@ local function breed(self)
 			if num > 1 then
 				self.hornytimer = 41
 				ent.hornytimer = 41
+				-- spawn baby
 				minetest.after(7, function(dtime)
 					local mob = minetest.add_entity(pos, self.name)
 					local ent2 = mob:get_luaentity()
@@ -613,10 +614,10 @@ minetest.register_entity(name, {
 
 		-- when lifetimer expires remove mob (except npc and tamed)
 		if self.type ~= "npc"
-		and not self.tamed then
+		and not self.tamed
+		and self.state ~= "attack" then
 			self.lifetimer = self.lifetimer - dtime
-			if self.lifetimer <= 0
-			and self.state ~= "attack" then
+			if self.lifetimer <= 0 then
 				minetest.log("action",
 					"lifetimer expired, removed " .. self.name)
 				effect(pos, 15, "tnt_smoke.png")
@@ -691,6 +692,10 @@ minetest.register_entity(name, {
 			end
 			self.timer = 0
 		end
+		-- never go over 100
+		if self.timer > 100 then
+			self.timer = 1
+		end
 
 		-- mob plays random sound at times
 		if self.sounds.random
@@ -712,6 +717,7 @@ minetest.register_entity(name, {
 				self.do_custom(self)
 			end
 		elseif self.state ~= "attack" then
+			self.env_damage_timer = 0
 			do_env_damage(self)
 			-- custom function
 			if self.do_custom then

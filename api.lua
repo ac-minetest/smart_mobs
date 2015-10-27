@@ -423,12 +423,12 @@ local function breed(self)
 		end
 	end
 
-	-- find another same animal who is also horny and mate
+	-- find another same animal who is also horny and mate if close enough
 	if self.horny == true
 	and self.hornytimer <= 40 then
 		local pos = self.object:getpos()
 		effect({x = pos.x, y = pos.y + 1, z = pos.z}, 4, "heart.png")
-		local ents = minetest.get_objects_inside_radius(pos, self.view_range)
+		local ents = minetest.get_objects_inside_radius(pos, 3)
 		local num = 0
 		local ent = nil
 		for i,obj in ipairs(ents) do

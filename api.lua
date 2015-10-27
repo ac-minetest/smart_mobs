@@ -207,6 +207,7 @@ function within_limits(pos, radius)
 	return false -- beyond limits
 end
 
+-- environmental damage (water, lava, fire, light)
 do_env_damage = function(self)
 
 	-- feed/tame text timer (so mob full messages dont spam chat)
@@ -259,6 +260,7 @@ do_env_damage = function(self)
 	check_for_death(self)
 end
 
+-- jump if facing a solid node (not fences)
 do_jump = function(self)
 
 	if self.fly then
@@ -307,9 +309,9 @@ do_jump = function(self)
 	end
 end
 
+-- check if POS is in mobs field of view
 in_fov = function(self, pos)
 
-	-- check if POS is in mobs field of view
 	local yaw = self.object:getyaw() + self.rotate
 	local vx = math.sin(yaw)
 	local vz = math.cos(yaw)
@@ -326,7 +328,7 @@ in_fov = function(self, pos)
 	return true
 end
 
--- modified from TNT mod
+-- blast damage to entities nearby (modified from TNT mod)
 function entity_physics(pos, radius)
 
 	radius = radius * 2
@@ -344,7 +346,7 @@ function entity_physics(pos, radius)
 	end
 end
 
--- get node at location but with fallback for nil or unknown
+-- get node but use fallback for nil or unknown
 function node_ok(pos, fallback)
 
 	fallback = fallback or "default:dirt"
@@ -386,6 +388,7 @@ function follow_holding(self, clicker)
 end
 
 local function breed(self)
+
 	-- horny animal can mate for 40 seconds,
 	-- afterwards horny animal cannot mate again for 200 seconds
 	if self.horny == true
@@ -412,10 +415,11 @@ local function breed(self)
 			})
 			-- jump when grown so not to fall into ground
 			local v = self.object:getvelocity()
-			v.x = 0
-			v.y = self.jump_height
-			v.z = 0
-			self.object:setvelocity(v)
+			self.object:setvelocity({
+				x = 0,
+				y = self.jump_height,
+				z = 0
+			})
 		end
 	end
 
@@ -1721,13 +1725,14 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 		-- heal health
 		local hp = self.object:get_hp()
 		hp = hp + 4
-		if hp >= self.hp_max
-		and self.htimer < 1 then
+		if hp >= self.hp_max then
 			hp = self.hp_max
-			minetest.chat_send_player(clicker:get_player_name(),
-				self.name:split(":")[2]
-				.. " at full health (" .. tostring(hp) .. ")")
-			self.htimer = 5
+			if self.htimer < 1 then
+				minetest.chat_send_player(clicker:get_player_name(),
+					self.name:split(":")[2]
+					.. " at full health (" .. tostring(hp) .. ")")
+				self.htimer = 5
+			end
 		end
 		self.object:set_hp(hp)
 		self.health = hp

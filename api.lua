@@ -827,7 +827,7 @@ minetest.register_entity(name, {
 		else
 			-- stop following player if not holding specific item
 			if self.following
-			and self.following.is_player
+			and self.following:is_player()
 			and follow_holding(self, self.following) == false then
 				self.following = nil
 			end
@@ -838,8 +838,7 @@ minetest.register_entity(name, {
 			local s = self.object:getpos()
 			local p
 
-			if self.following.is_player
-			and self.following:is_player() then
+			if self.following:is_player() then
 				p = self.following:getpos()
 			elseif self.following.object then
 				p = self.following.object:getpos()
@@ -876,7 +875,6 @@ minetest.register_entity(name, {
 						end
 						set_velocity(self, self.walk_velocity)
 						if self.walk_chance ~= 0 then
-							--self:set_animation("walk")
 							set_animation(self, "walk")
 						end
 					else
@@ -896,7 +894,6 @@ minetest.register_entity(name, {
 
 				if self.type == "npc" then
 					local o = minetest.get_objects_inside_radius(self.object:getpos(), 3)
-					local yaw = 0
 					for _,o in ipairs(o) do
 						if o:is_player() then
 							lp = o:getpos()
@@ -906,7 +903,7 @@ minetest.register_entity(name, {
 				end
 
 				-- look at any players nearby, otherwise turn randomly
-				if lp ~= nil then
+				if lp then
 					local vec = {x = lp.x - s.x, y = lp.y - s.y, z = lp.z - s.z}
 					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 					if lp.x > s.x then
@@ -1054,7 +1051,7 @@ minetest.register_entity(name, {
 					entity_physics(pos, 3)
 					if minetest.find_node_near(pos, 1, {"group:water"})
 					or minetest.is_protected(pos, "") then
-						if self.sounds.explode ~= "" then
+						if self.sounds.explode then
 							minetest.sound_play(self.sounds.explode, {
 								pos = pos,
 								gain = 1.0,
@@ -1068,6 +1065,7 @@ minetest.register_entity(name, {
 					pos.y = pos.y - 1
 					mobs:explosion(pos, 2, 0, 1, self.sounds.explode)
 					self.object:remove()
+					return
 				end
 			end
 
@@ -1162,8 +1160,8 @@ minetest.register_entity(name, {
 						end
 						-- punch player
 						self.attack:punch(self.object, 1.0,  {
-							full_punch_interval=1.0,
-							damage_groups = {fleshy=self.damage}
+							full_punch_interval = 1.0,
+							damage_groups = {fleshy = self.damage}
 						}, nil)
 					end
 				end
@@ -1175,7 +1173,6 @@ minetest.register_entity(name, {
 			p.y = p.y - .5
 			s.y = s.y + .5
 			local dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
-
 			local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 			yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 			if p.x > s.x then
@@ -1339,7 +1336,7 @@ minetest.register_entity(name, {
 		if weapon:get_definition().sounds ~= nil then
 			local s = math.random(0, #weapon:get_definition().sounds)
 			minetest.sound_play(weapon:get_definition().sounds[s], {
-				object=hitter,
+				object = hitter,
 				max_hear_distance = 8
 			})
 		else

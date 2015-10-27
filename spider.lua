@@ -2,6 +2,7 @@
 -- Spider by AspireMint (fishyWET (CC-BY-SA 3.0 license for texture)
 
 mobs:register_mob("mobs:spider", {
+	docile_by_day = true,
 	type = "monster",
 	passive = false,
 	attack_type = "dogfight",

@@ -1,4 +1,4 @@
--- Mobs Api (19th October 2015)
+-- Mobs Api (27th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -215,7 +215,7 @@ do_env_damage = function(self)
 	end
 
 	local pos = self.object:getpos()
-	local tod = minetest.get_timeofday()
+	self.time_of_day = minetest.get_timeofday()
 
 	-- remove mob if beyond map limits
 	if not within_limits(pos, 0) then
@@ -226,8 +226,8 @@ do_env_damage = function(self)
 	-- daylight above ground
 	if self.light_damage ~= 0
 	and pos.y > 0
-	and tod > 0.2
-	and tod < 0.8
+	and self.time_of_day > 0.2
+	and self.time_of_day < 0.8
 	and (minetest.get_node_light(pos) or 0) > 12 then
 		self.object:set_hp(self.object:get_hp() - self.light_damage)
 		effect(pos, 5, "tnt_smoke.png")
@@ -511,6 +511,18 @@ function replace(self, pos)
 	end
 end
 
+-- chceck if daytime and if mob is docile during daylight hours
+function day_docile(self)
+
+	if self.docile_by_day == false then
+		return false
+	elseif self.docile_by_day == true
+	and self.time_of_day > 0.2
+	and self.time_of_day < 0.8 then
+		return true
+	end
+end
+
 -- register mob function
 
 function mobs:register_mob(name, def)
@@ -587,6 +599,8 @@ minetest.register_entity(name, {
 	reach = def.reach or 3,
 	htimer = 0,
 	child_texture = def.child_texture,
+	docile_by_day = def.docile_by_day or false,
+	time_of_day = 0.5,
 
 	on_step = function(self, dtime)
 
@@ -704,7 +718,8 @@ minetest.register_entity(name, {
 		-- find someone to attack
 		if self.type == "monster"
 		and damage_enabled
-		and self.state ~= "attack" then
+		and self.state ~= "attack"
+		and not day_docile(self) then
 
 			local s = self.object:getpos()
 			local p, sp, dist

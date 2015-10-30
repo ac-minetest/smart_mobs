@@ -45,9 +45,6 @@ mobs:register_mob("mobs:chicken", {
 	},
 	follow = {"farming:seed_wheat", "farming:seed_cotton"},
 	view_range = 5,
---	replace_rate = 8000,
---	replace_what = {"air"},
---	replace_with = "mobs:egg",
 
 	on_rightclick = function(self, clicker)
 		mobs:feed_tame(self, clicker, 8, true, true)
@@ -56,7 +53,7 @@ mobs:register_mob("mobs:chicken", {
 
 	do_custom = function(self)
 		if not self.child
-		and math.random(1, 100) == 1 then
+		and math.random(1, 500) == 1 then
 			local pos = self.object:getpos()
 			minetest.add_item(pos, "mobs:egg")
 			minetest.sound_play("default_place_node_hard", {

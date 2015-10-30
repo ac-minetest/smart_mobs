@@ -1,4 +1,4 @@
--- Mobs Api (27th October 2015)
+-- Mobs Api (30th October 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -250,8 +250,9 @@ do_env_damage = function(self)
 		-- lava or fire
 		if self.lava_damage ~= 0
 		and (nodef.groups.lava
-			or nod.name == "fire:basic_flame"
-			or nod.name == "fire:eternal_flame") then
+		or nod.name == "fire:basic_flame"
+		or nod.name == "fire:eternal_flame"
+		or nod.name == "fire:permanent_flame") then
 			self.object:set_hp(self.object:get_hp() - self.lava_damage)
 			effect(pos, 5, "fire_basic_flame.png")
 		end
@@ -263,7 +264,8 @@ end
 -- jump if facing a solid node (not fences)
 do_jump = function(self)
 
-	if self.fly then
+	if self.fly
+	or self.child then
 		return
 	end
 

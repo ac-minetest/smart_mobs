@@ -93,9 +93,15 @@ mobs:register_arrow("mobs:egg_entity", {
 
 	hit_node = function(self, pos, node)
 
-		local num = math.random(1, 8)
+		local num = math.random(1, 10)
 		if num == 1 then
 			pos.y = pos.y + 1
+			local nod = minetest.get_node_or_nil(pos)
+			if not nod
+			or not minetest.registered_nodes[nod.name]
+			or minetest.registered_nodes[nod.name].walkable == true then
+				return
+			end
 			local mob = minetest.add_entity(pos, "mobs:chicken")
 			local ent2 = mob:get_luaentity()
 			mob:set_properties({
@@ -150,6 +156,7 @@ local mobs_shoot_egg = function (item, player, pointed_thing)
 		y = -egg_GRAVITY,
 		z = dir.z * -3
 	})
+	-- pass player name to egg for chick ownership
 	local ent2 = obj:get_luaentity()
 	ent2.playername = player:get_player_name()
 	item:take_item()

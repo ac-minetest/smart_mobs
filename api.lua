@@ -1,4 +1,4 @@
--- Mobs Api (30th October 2015)
+-- Mobs Api (1st November 2015)
 mobs = {}
 mobs.mod = "redo"
 

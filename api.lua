@@ -1558,23 +1558,25 @@ function mobs:register_spawn(name, nodes, max_light, min_light, chance, active_o
 		chance, active_object_count, -31000, max_height)
 end
 
+-- set content id's
+local c_air = minetest.get_content_id("air")
+local c_ignore = minetest.get_content_id("ignore")
+local c_obsidian = minetest.get_content_id("default:obsidian")
+local c_brick = minetest.get_content_id("default:obsidianbrick")
+local c_chest = minetest.get_content_id("default:chest_locked")
+
 -- explosion (cannot break protected or unbreakable nodes)
 function mobs:explosion(pos, radius, fire, smoke, sound)
 
+	radius = radius or 0
 	fire = fire or 0
 	smoke = smoke or 0
 
-	local pos = vector.round(pos)
-	local vm = VoxelManip()
-	local minp, maxp = vm:read_from_map(vector.subtract(pos, radius), vector.add(pos, radius))
-	local a = VoxelArea:new({MinEdge = minp, MaxEdge = maxp})
-	local data = vm:get_data()
-	local p = {}
-	local c_air = minetest.get_content_id("air")
-	local c_ignore = minetest.get_content_id("ignore")
-	local c_obsidian = minetest.get_content_id("default:obsidian")
-	local c_brick = minetest.get_content_id("default:obsidianbrick")
-	local c_chest = minetest.get_content_id("default:chest_locked")
+	-- if area protected or near map limits then no blast damage
+	if minetest.is_protected(pos, "")
+	or not within_limits(pos, radius) then
+		return
+	end
 
 	-- explosion sound
 	if sound
@@ -1586,11 +1588,12 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		})
 	end
 
-	-- if area protected or near map limits then no blast damage
-	if minetest.is_protected(pos, "")
-	or not within_limits(pos, radius) then
-		return
-	end
+	--local pos = vector.round(pos)
+	local vm = VoxelManip()
+	local minp, maxp = vm:read_from_map(vector.subtract(pos, radius), vector.add(pos, radius))
+	local a = VoxelArea:new({MinEdge = minp, MaxEdge = maxp})
+	local data = vm:get_data()
+	local p = {}
 
 	for z = -radius, radius do
 	for y = -radius, radius do
@@ -1607,7 +1610,8 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		and data[vi] ~= c_brick
 		and data[vi] ~= c_chest then
 
-			local n = node_ok(p).name
+			--local n = node_ok(p).name
+			local n = minetest.get_name_from_content_id(data[vi])
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 
 				-- if chest then drop items inside
@@ -1638,7 +1642,7 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 				or math.random(1, 100) <= 30) then
 					minetest.set_node(p, {name = "fire:basic_flame"})
 				else
-					minetest.remove_node(p)
+					minetest.set_node(p, {name = "air"})
 				end
 
 				if smoke > 0 then

@@ -1610,18 +1610,19 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		and data[vi] ~= c_brick
 		and data[vi] ~= c_chest then
 
-			--local n = node_ok(p).name
-			local n = minetest.get_name_from_content_id(data[vi])
+			local n = node_ok(p).name
+
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 
 				-- if chest then drop items inside
 				if n == "default:chest"
-				or n == "3dchest:chest" then
+				or n == "3dchest:chest"
+				or n == "bones:bones" then
 
 					local meta = minetest.get_meta(p)
 					local inv  = meta:get_inventory()
 
-					for i = 1, 32 do
+					for i = 1, inv:get_size("main") do
 
 						local m_stack = inv:get_stack("main", i)
 						local obj = minetest.add_item(p, m_stack)

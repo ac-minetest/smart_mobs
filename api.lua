@@ -1,4 +1,4 @@
--- Mobs Api (4th November 2015)
+-- Mobs Api (6th November 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -345,7 +345,7 @@ function entity_physics(pos, radius)
 	radius = radius * 2
 
 	local objs = minetest.get_objects_inside_radius(pos, radius)
-	local obj_pos, obj_vel, dist
+	local obj_pos, dist
 
 	for _, obj in pairs(objs) do
 
@@ -1393,7 +1393,8 @@ minetest.register_entity(name, {
 		local weapon = hitter:get_wielded_item()
 		local punch_interval = tool_capabilities.full_punch_interval or 1.4
 
-		if weapon:get_definition().tool_capabilities ~= nil then
+		if  weapon:get_definition()
+		and weapon:get_definition().tool_capabilities then
 			local wear = math.floor((punch_interval / 75) * 9000)
 			weapon:add_wear(wear)
 			hitter:set_wielded_item(weapon)

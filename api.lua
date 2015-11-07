@@ -297,6 +297,11 @@ do_jump = function(self)
 		z = pos.z + self.direction.z
 	})
 
+	-- thin blocks that do not need to be jumped
+	if nod.name == "default:snow" then
+		return
+	end
+
 --print ("in front:", nod.name, pos.y + 0.5)
 
 	if minetest.registered_items[nod.name].walkable

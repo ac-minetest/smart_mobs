@@ -272,50 +272,50 @@ end
 
 -- jump if facing a solid node (not fences)
 do_jump = function(self)
-
 	if self.fly
 	or self.child then
 		return
 	end
 
 	local pos = self.object:getpos()
+
+	-- what is mob standing on?
 	pos.y = (pos.y + self.collisionbox[2]) - 0.2
 	local nod = node_ok(pos)
 
 --print ("standing on:", nod.name, pos.y)
 
-	if minetest.registered_nodes[nod.name].walkable == false then
+	if minetest.registered_nodes[nod.name].walkable == false
+	or not self.direction then
 		return
 	end
 
-	if self.direction then
+	-- what is in front of mob?
+	local nod = node_ok({
+		x = pos.x + self.direction.x,
+		y = pos.y + 0.5,
+		z = pos.z + self.direction.z
+	})
 
-		local nod = node_ok({
-			x = pos.x + self.direction.x,
-			y = pos.y + 0.5,
-			z = pos.z + self.direction.z
-		})
+--print ("in front:", nod.name, pos.y + 0.5)
 
---print ("in front:", nod.name, pos.y)
+	if minetest.registered_items[nod.name].walkable
+	and not nod.name:find("fence")
+	or self.walk_chance == 0 then
 
-		if minetest.registered_items[nod.name].walkable
-		and not nod.name:find("fence")
-		or self.walk_chance == 0 then
+		local v = self.object:getvelocity()
+		v.y = self.jump_height + 1
+		v.x = v.x * 2.2
+		v.z = v.z * 2.2
 
-			local v = self.object:getvelocity()
-			v.y = self.jump_height + 1
-			v.x = v.x * 2.2
-			v.z = v.z * 2.2
+		self.object:setvelocity(v)
 
-			self.object:setvelocity(v)
-
-			if self.sounds.jump then
-				minetest.sound_play(self.sounds.jump, {
-					pos = pos,
-					gain = 1.0,
-					max_hear_distance = self.sounds.distance
-				})
-			end
+		if self.sounds.jump then
+			minetest.sound_play(self.sounds.jump, {
+				pos = pos,
+				gain = 1.0,
+				max_hear_distance = self.sounds.distance
+			})
 		end
 	end
 end
@@ -1363,7 +1363,7 @@ minetest.register_entity(name, {
 
 		-- remove mob when out of range unless tamed
 		if mobs.remove and self.remove_ok and not self.tamed then
-			print ("REMOVED", self.remove_ok, self.name)
+			--print ("REMOVED", self.remove_ok, self.name)
 			self.object:remove()
 			return nil
 		end

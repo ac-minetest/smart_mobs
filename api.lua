@@ -1,4 +1,4 @@
--- Mobs Api (6th November 2015)
+-- Mobs Api (7th November 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1391,7 +1391,11 @@ minetest.register_entity(name, {
 
 		-- weapon wear
 		local weapon = hitter:get_wielded_item()
-		local punch_interval = tool_capabilities.full_punch_interval or 1.4
+		local punch_interval = 1.4
+
+		if tool_capabilities then
+			punch_interval = tool_capabilities.full_punch_interval or 1.4
+		end
 
 		if  weapon:get_definition()
 		and weapon:get_definition().tool_capabilities then

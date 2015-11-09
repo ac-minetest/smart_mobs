@@ -1,4 +1,4 @@
--- Mobs Api (7th November 2015)
+-- Mobs Api (9th November 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -718,19 +718,25 @@ minetest.register_entity(name, {
 
 		-- knockback timer
 		if self.pause_timer > 0 then
+
 			self.pause_timer = self.pause_timer - dtime
+
 			if self.pause_timer < 1 then
 				self.pause_timer = 0
 			end
+
 			return
 		end
 
 		-- attack timer
 		self.timer = self.timer + dtime
+
 		if self.state ~= "attack" then
+
 			if self.timer < 1 then
 				return
 			end
+
 			self.timer = 0
 		end
 		-- never go over 100
@@ -1394,6 +1400,11 @@ minetest.register_entity(name, {
 
 	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
 
+		-- cannot punch spamming
+		if tflp < 0.45 then
+			return
+		end
+
 		-- weapon wear
 		local weapon = hitter:get_wielded_item()
 		local punch_interval = 1.4
@@ -1402,10 +1413,9 @@ minetest.register_entity(name, {
 			punch_interval = tool_capabilities.full_punch_interval or 1.4
 		end
 
-		if  weapon:get_definition()
+		if weapon:get_definition()
 		and weapon:get_definition().tool_capabilities then
-			local wear = math.floor((punch_interval / 75) * 9000)
-			weapon:add_wear(wear)
+			weapon:add_wear(math.floor((punch_interval / 75) * 9000))
 			hitter:set_wielded_item(weapon)
 		end
 
@@ -1441,26 +1451,25 @@ minetest.register_entity(name, {
 		-- knock back effect
 		if self.knock_back > 0 then
 
-			local kb = self.knock_back
-			local r = self.recovery_time
 			local v = self.object:getvelocity()
-
-			if tflp < punch_interval then
-
-				if kb > 0 then
-					kb = kb * (tflp / punch_interval)
-				end
-
-				r = r * (tflp / punch_interval)
-			end
+			local r = 1.4 - math.min(punch_interval, 1.4)
+			--local r = self.recovery_time
+			local kb = r * 5
+			--local kb = self.knock_back
 
 			self.object:setvelocity({
 				x = dir.x * kb,
-				y = 0,
+				y = 2,
 				z = dir.z * kb
 			})
 
 			self.pause_timer = r
+			set_animation(self, "stand")
+			self.state = "nada" -- temporary state
+
+			minetest.after(r, function()
+				self.state = "stand"
+			end)
 		end
 
 		-- attack puncher and call other mobs for help

@@ -30,7 +30,7 @@ for _, col in ipairs(all_colours) do
 		jump = true,
 		drops = {
 			{name = "mobs:meat_raw",
-			chance = 1, min = 2, max = 3},
+			chance = 1, min = 1, max = 2},
 			{name = "wool:"..col,
 			chance = 1, min = 1, max = 1},
 		},
@@ -79,7 +79,7 @@ for _, col in ipairs(all_colours) do
 					if minetest.get_modpath("wool") then
 						local pos = self.object:getpos()
 						pos.y = pos.y + 0.5
-						local obj = minetest.add_item(pos, ItemStack("wool:"..shpcolor.." "..math.random(2,3)))
+						local obj = minetest.add_item(pos, ItemStack("wool:"..shpcolor.." "..math.random(1,3)))
 						if obj then
 							obj:setvelocity({
 								x = math.random(-1,1),

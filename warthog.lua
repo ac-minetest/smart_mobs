@@ -29,7 +29,7 @@ mobs:register_mob("mobs:pumba", {
 	view_range = 10,
 	drops = {
 		{name = "mobs:pork_raw",
-		chance = 1, min = 2, max = 3},
+		chance = 1, min = 1, max = 3},
 	},
 	water_damage = 1,
 	lava_damage = 5,

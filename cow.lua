@@ -25,9 +25,9 @@ mobs:register_mob("mobs:cow", {
 	jump = true,
 	drops = {
 		{name = "mobs:meat_raw",
-		chance = 1, min = 5, max = 10},
+		chance = 1, min = 1, max = 3},
 		{name = "mobs:leather",
-		chance = 1, min = 0, max = 3},
+		chance = 1, min = 1, max = 2},
 	},
 	water_damage = 1,
 	lava_damage = 5,

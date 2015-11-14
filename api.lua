@@ -1464,12 +1464,12 @@ minetest.register_entity(name, {
 			})
 
 			self.pause_timer = r
-			set_animation(self, "stand")
-			self.state = "nada" -- temporary state
+			--set_animation(self, "stand")
+			--self.state = "nada" -- temporary state
 
-			minetest.after(r, function()
-				self.state = "stand"
-			end)
+			--minetest.after(r, function()
+				--self.state = "stand"
+			--end)
 		end
 
 		-- attack puncher and call other mobs for help

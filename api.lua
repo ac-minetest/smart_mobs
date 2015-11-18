@@ -1,4 +1,4 @@
--- Mobs Api (9th November 2015)
+-- Mobs Api (18th November 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1115,7 +1115,7 @@ minetest.register_entity(name, {
 					self.blinkstatus = not self.blinkstatus
 				end
 				if self.timer > 3 then
-					local pos = vector.round(self.object:getpos())
+					local pos = self.object:getpos()
 					-- hurt player/mobs caught in blast area
 					entity_physics(pos, 3)
 					if minetest.find_node_near(pos, 1, {"group:water"})
@@ -1608,7 +1608,6 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		})
 	end
 
-	--local pos = vector.round(pos)
 	local vm = VoxelManip()
 	local minp, maxp = vm:read_from_map(vector.subtract(pos, radius), vector.add(pos, radius))
 	local a = VoxelArea:new({MinEdge = minp, MaxEdge = maxp})

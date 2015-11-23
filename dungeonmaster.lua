@@ -55,7 +55,7 @@ mobs:register_mob("mobs:dungeon_master", {
 	},
 })
 
-mobs:register_spawn("mobs:dungeon_master", {"default:stone"}, 5, 0, 7000, 1, -70)
+mobs:register_spawn("mobs:dungeon_master", {"default:stone"}, 5, 0, 7000, 2, -70)
 
 mobs:register_egg("mobs:dungeon_master", "Dungeon Master", "fire_basic_flame.png", 1)
 

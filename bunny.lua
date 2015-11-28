@@ -40,7 +40,7 @@ mobs:register_mob("mobs:bunny", {
 	},
 	follow = {"farming:carrot", "farming_plus:carrot_item"},
 	view_range = 8,
-	replace_rate = 80,
+	replace_rate = 10,
 	replace_what = {"farming:carrot_7", "farming:carrot_8", "farming_plus:carrot"},
 	replace_with = "air",
 	on_rightclick = function(self, clicker)

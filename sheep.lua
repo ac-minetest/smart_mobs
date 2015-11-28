@@ -47,7 +47,7 @@ for _, col in ipairs(all_colours) do
 		},
 		follow = {"farming:wheat", "default:grass_5"},
 		view_range = 8,
-		replace_rate = 50,
+		replace_rate = 10,
 		replace_what = {"default:grass_3", "default:grass_4", "default:grass_5", "farming:wheat_8"},
 		replace_with = "air",
 		replace_offset = -1,

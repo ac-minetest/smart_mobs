@@ -44,7 +44,7 @@ mobs:register_mob("mobs:oerkki", {
 		speed_normal = 15,
 		speed_run = 15,
 	},
-	replace_rate = 40,
+	replace_rate = 5,
 	replace_what = {"default:torch"},
 	replace_with = "air",
 	replace_offset = -1,

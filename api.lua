@@ -1,4 +1,4 @@
--- Mobs Api (18th November 2015)
+-- Mobs Api (28th November 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -214,7 +214,7 @@ end
 -- environmental damage (water, lava, fire, light)
 do_env_damage = function(self)
 
-	-- feed/tame text timer (so mob full messages dont spam chat)
+	-- feed/tame text timer (so mob 'full' messages dont spam chat)
 	if self.htimer > 0 then
 		self.htimer = self.htimer - 1
 	end
@@ -260,7 +260,6 @@ do_env_damage = function(self)
 		if self.lava_damage ~= 0
 		and (nodef.groups.lava
 		or nod.name == "fire:basic_flame"
-		or nod.name == "fire:eternal_flame"
 		or nod.name == "fire:permanent_flame") then
 			self.object:set_hp(self.object:get_hp() - self.lava_damage)
 			effect(pos, 5, "fire_basic_flame.png")
@@ -323,25 +322,6 @@ do_jump = function(self)
 			})
 		end
 	end
-end
-
--- check if POS is in mobs field of view
-in_fov = function(self, pos)
-
-	local yaw = self.object:getyaw() + self.rotate
-	local vx = math.sin(yaw)
-	local vz = math.cos(yaw)
-	local ds = math.sqrt(vx ^ 2 + vz ^ 2)
-	local ps = math.sqrt(pos.x ^ 2 + pos.z ^ 2)
-	local d = {x = vx / ds, z = vz / ds}
-	local p = {x = pos.x / ps, z = pos.z / ps}
-	local an = (d.x * p.x) + (d.z * p.z)
-
-	if math.deg(math.acos(an)) > (self.fov / 2) then
-		return false
-	end
-
-	return true
 end
 
 -- blast damage to entities nearby (modified from TNT mod)
@@ -498,7 +478,7 @@ local function breed(self)
 				ent.hornytimer = 41
 
 				-- spawn baby
-				minetest.after(7, function(dtime)
+				minetest.after(5, function(dtime)
 
 					local mob = minetest.add_entity(pos, self.name)
 					local ent2 = mob:get_luaentity()
@@ -549,11 +529,16 @@ function replace(self, pos)
 		and self.object:getvelocity().y == 0
 		and #minetest.find_nodes_in_area(pos, pos, self.replace_what) > 0 then
 			minetest.set_node(pos, {name = self.replace_with})
+			-- when cow/sheep eats grass, replace wool and milk
+			if self.gotten == true then
+				self.gotten = false
+				self.object:set_properties(self)
+			end
 		end
 	end
 end
 
--- chceck if daytime and if mob is docile during daylight hours
+-- check if daytime and also if mob is docile during daylight hours
 function day_docile(self)
 
 	if self.docile_by_day == false then
@@ -629,8 +614,6 @@ minetest.register_entity(name, {
 	replace_offset = def.replace_offset or 0,
 	timer = 0,
 	env_damage_timer = 0, -- only used when state = "attack"
-	attack = {player = nil, dist = nil},
-	state = "stand",
 	tamed = false,
 	pause_timer = 0,
 	horny = false,
@@ -664,9 +647,6 @@ minetest.register_entity(name, {
 				return
 			end
 		end
-
-		-- node replace check (chicken lays egg, cow eats grass etc.)
-		replace(self, pos)
 
 		if not self.fly then
 			-- floating in water (or falling)
@@ -744,6 +724,9 @@ minetest.register_entity(name, {
 			self.timer = 1
 		end
 
+		-- node replace check (cow eats grass etc.)
+		replace(self, pos)
+
 		-- mob plays random sound at times
 		if self.sounds.random
 		and math.random(1, 100) <= 1 then
@@ -811,7 +794,7 @@ minetest.register_entity(name, {
 					dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
 
 					if dist < self.view_range then
-					-- and self.in_fov(self,p) then
+					-- field of view check goes here
 						-- choose closest player to attack
 						if minetest.line_of_sight(sp, p, 2) == true
 						and dist < min_dist then
@@ -859,7 +842,7 @@ minetest.register_entity(name, {
 			end
 		end
 
-		-- breed mobs and grow children
+		-- breed and grow children
 		breed(self)
 
 		-- find player to follow
@@ -867,11 +850,15 @@ minetest.register_entity(name, {
 		or self.order == "follow")
 		and not self.following
 		and self.state ~= "attack" then
+
 			local s, p, dist
+
 			for _,player in pairs(minetest.get_connected_players()) do
+
 				s = self.object:getpos()
 				p = player:getpos()
 				dist = ((p.x - s.x) ^ 2 + (p.y - s.y) ^ 2 + (p.z - s.z) ^ 2) ^ 0.5
+
 				if dist < self.view_range then
 					self.following = player
 					break
@@ -1194,7 +1181,6 @@ minetest.register_entity(name, {
 			self.object:setyaw(yaw)
 
 			-- move towards enemy if beyond mob reach
-			-- set reach for each mob (default is 3)
 			if dist > self.reach then
 				-- jump attack
 				if (self.jump
@@ -1302,6 +1288,7 @@ minetest.register_entity(name, {
 				end
 			end
 		else
+			self.object:remove()
 			return
 		end
 
@@ -1373,7 +1360,9 @@ minetest.register_entity(name, {
 	get_staticdata = function(self)
 
 		-- remove mob when out of range unless tamed
-		if mobs.remove and self.remove_ok and not self.tamed then
+		if mobs.remove
+		and self.remove_ok
+		and not self.tamed then
 			--print ("REMOVED", self.remove_ok, self.name)
 			self.object:remove()
 			return nil
@@ -1400,7 +1389,7 @@ minetest.register_entity(name, {
 
 	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
 
-		-- cannot punch spamming
+		-- no punch punch spamming
 		if tflp < 0.45 then
 			return
 		end
@@ -1453,9 +1442,7 @@ minetest.register_entity(name, {
 
 			local v = self.object:getvelocity()
 			local r = 1.4 - math.min(punch_interval, 1.4)
-			--local r = self.recovery_time
 			local kb = r * 5
-			--local kb = self.knock_back
 
 			self.object:setvelocity({
 				x = dir.x * kb,
@@ -1464,12 +1451,6 @@ minetest.register_entity(name, {
 			})
 
 			self.pause_timer = r
-			--set_animation(self, "stand")
-			--self.state = "nada" -- temporary state
-
-			--minetest.after(r, function()
-				--self.state = "stand"
-			--end)
 		end
 
 		-- attack puncher and call other mobs for help
@@ -1562,7 +1543,7 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 				return
 			end
 
-			-- spawn mob half block higher then ground
+			-- spawn mob half block higher than ground
 			pos.y = pos.y - 0.5
 			minetest.add_entity(pos, name)
 			--print ("Spawned "..name.." at "..minetest.pos_to_string(pos).." on "..node.name.." near "..neighbors[1])
@@ -1608,6 +1589,7 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		})
 	end
 
+	pos = vector.round(pos) -- voxelmanip doesn't work properly unless pos is rounded ?!?!
 	local vm = VoxelManip()
 	local minp, maxp = vm:read_from_map(vector.subtract(pos, radius), vector.add(pos, radius))
 	local a = VoxelArea:new({MinEdge = minp, MaxEdge = maxp})
@@ -1663,10 +1645,9 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 					minetest.set_node(p, {name = "fire:basic_flame"})
 				else
 					minetest.set_node(p, {name = "air"})
-				end
-
-				if smoke > 0 then
-					effect(p, 2, "tnt_smoke.png", 5)
+					if smoke > 0 then
+						effect(p, 2, "tnt_smoke.png", 5)
+					end
 				end
 			end
 		end

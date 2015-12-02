@@ -1,4 +1,4 @@
--- Mobs Api (28th November 2015)
+-- Mobs Api (1st Decemberk 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -39,9 +39,9 @@ set_velocity = function(self, v)
 		self.rotate = math.rad(90)
 	end
 
-	local yaw = self.object:getyaw() + self.rotate
-	local x = math.sin(yaw) * -v
-	local z = math.cos(yaw) * v
+	local yaw = (self.object:getyaw() + self.rotate) or 0
+	local x = (math.sin(yaw) * -v) or 0
+	local z = (math.cos(yaw) * v) or 0
 
 	self.object:setvelocity({
 		x = x,
@@ -887,6 +887,7 @@ minetest.register_entity(name, {
 
 		-- follow that thing
 		if self.following then
+
 			local s = self.object:getpos()
 			local p
 
@@ -906,6 +907,7 @@ minetest.register_entity(name, {
 				else
 					local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+					
 					if p.x > s.x then
 						yaw = yaw + pi
 					end
@@ -1014,7 +1016,8 @@ minetest.register_entity(name, {
 				self.object:setyaw(yaw)
 			-- otherwise randomly turn
 			elseif math.random(1, 100) <= 30 then
-				self.object:setyaw(self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi))
+				yaw = self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi)
+				self.object:setyaw(yaw)
 			end
 
 			-- jump when walking comes to a halt
@@ -1089,7 +1092,12 @@ minetest.register_entity(name, {
 				end
 				set_animation(self, "run")
 			else
-				set_velocity(self, 0)
+				--set_velocity(self, 0) -- CAUSES serialize.h error
+				self.object:setvelocity({
+					x = 0,
+					y = self.object:getvelocity().y,
+					z = 0
+				}) -- REPLACED WITH THIS
 				self.timer = self.timer + dtime
 				self.blinktimer = (self.blinktimer or 0) + dtime
 				if self.blinktimer > 0.2 then
@@ -1198,14 +1206,23 @@ minetest.register_entity(name, {
 				set_velocity(self, self.run_velocity)
 				set_animation(self, "run")
 			else
-				set_velocity(self, 0)
+
+				--set_velocity(self, 0) -- CAUSES serialize.h error
+				self.object:setvelocity({
+					x = 0,
+					y = self.object:getvelocity().y,
+					z = 0
+				}) -- REPLACED WITH THIS
 				set_animation(self, "punch")
+
 				if self.timer > 1 then
+
 					self.timer = 0
 					local p2 = p
 					local s2 = s
 					p2.y = p2.y + 1.5
 					s2.y = s2.y + 1.5
+
 					if minetest.line_of_sight(p2, s2) == true then
 						-- play attack sound
 						if self.sounds.attack then

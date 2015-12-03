@@ -1,4 +1,4 @@
--- Mobs Api (1st Decemberk 2015)
+-- Mobs Api (3rd December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -32,16 +32,22 @@ end
 
 set_velocity = function(self, v)
 
-	v = (v or 0)
+	local x, z
+
+	if not v
+	or v == 0 then
+		x = 0
+		z = 0
+	else
+		local yaw = self.object:getyaw() + self.rotate
+		x = math.sin(yaw) * -v
+		z = math.cos(yaw) * v
+	end
 
 	if self.drawtype
 	and self.drawtype == "side" then
 		self.rotate = math.rad(90)
 	end
-
-	local yaw = (self.object:getyaw() + self.rotate) or 0
-	local x = (math.sin(yaw) * -v) or 0
-	local z = (math.cos(yaw) * v) or 0
 
 	self.object:setvelocity({
 		x = x,
@@ -1092,12 +1098,7 @@ minetest.register_entity(name, {
 				end
 				set_animation(self, "run")
 			else
-				--set_velocity(self, 0) -- CAUSES serialize.h error
-				self.object:setvelocity({
-					x = 0,
-					y = self.object:getvelocity().y,
-					z = 0
-				}) -- REPLACED WITH THIS
+				set_velocity(self, 0)
 				self.timer = self.timer + dtime
 				self.blinktimer = (self.blinktimer or 0) + dtime
 				if self.blinktimer > 0.2 then
@@ -1207,12 +1208,7 @@ minetest.register_entity(name, {
 				set_animation(self, "run")
 			else
 
-				--set_velocity(self, 0) -- CAUSES serialize.h error
-				self.object:setvelocity({
-					x = 0,
-					y = self.object:getvelocity().y,
-					z = 0
-				}) -- REPLACED WITH THIS
+				set_velocity(self, 0)
 				set_animation(self, "punch")
 
 				if self.timer > 1 then

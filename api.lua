@@ -1,4 +1,4 @@
--- Mobs Api (4th December 2015)
+-- Mobs Api (6th December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -37,7 +37,7 @@ set_velocity = function(self, v)
 	local z = 0
 
 	if v and v ~= 0 then
-		local yaw = self.object:getyaw() + self.rotate
+		local yaw = (self.object:getyaw() + self.rotate) or 0
 		x = math.sin(yaw) * -v
 		z = math.cos(yaw) * v
 	end
@@ -863,7 +863,7 @@ minetest.register_entity(name, {
 			local s = self.object:getpos()
 			local obj = nil
 
-			for _, oir in pairs(minetest.get_objects_inside_radius(s,self.view_range)) do
+			for _, oir in pairs(minetest.get_objects_inside_radius(s, self.view_range)) do
 
 				obj = oir:get_luaentity()
 
@@ -957,7 +957,7 @@ minetest.register_entity(name, {
 					local vec = {x = p.x - s.x, y = p.y - s.y, z = p.z - s.z}
 
 					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
-					
+
 					if p.x > s.x then
 						yaw = yaw + pi
 					end
@@ -1320,6 +1320,7 @@ minetest.register_entity(name, {
 
 				set_velocity(self, self.run_velocity)
 				set_animation(self, "run")
+
 			else
 
 				set_velocity(self, 0)
@@ -1347,7 +1348,7 @@ minetest.register_entity(name, {
 						end
 
 						-- punch player
-						self.attack:punch(self.object, 1.0,  {
+						self.attack:punch(self.object, 1.0, {
 							full_punch_interval = 1.0,
 							damage_groups = {fleshy = self.damage}
 						}, nil)
@@ -1524,7 +1525,7 @@ minetest.register_entity(name, {
 		self.following = nil
 		self.state = "stand"
 
-		-- used to rotate for older mob definitions
+		-- used to rotate older mobs
 		if self.drawtype
 		and self.drawtype == "side" then
 			self.rotate = math.rad(90)
@@ -1711,8 +1712,15 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 
 			-- spawn mob half block higher than ground
 			pos.y = pos.y - 0.5
-			minetest.add_entity(pos, name)
-			--print ("Spawned "..name.." at "..minetest.pos_to_string(pos).." on "..node.name.." near "..neighbors[1])
+
+			local mob = minetest.add_entity(pos, name)
+			--local ent = mob:get_luaentity()
+
+			if mob then
+				print ("Spawned "..name.." at "..minetest.pos_to_string(pos).." on "..node.name.." near "..neighbors[1])
+			else
+				print (name.." failed to spawn at "..minetest.pos_to_string(pos))
+			end
 
 		end
 	})

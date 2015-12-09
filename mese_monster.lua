@@ -30,6 +30,7 @@ mobs:register_mob("mobs:mese_monster", {
 	jump_height = 8,
 	fall_damage = 0,
 	fall_speed = -6,
+	stepheight = 3,
 	drops = {
 		{name = "default:mese_crystal",
 		chance = 9, min = 1, max = 3},

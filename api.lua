@@ -1,4 +1,4 @@
--- Mobs Api (6th December 2015)
+-- Mobs Api (9th December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -6,6 +6,7 @@ mobs.mod = "redo"
 local damage_enabled = minetest.setting_getbool("enable_damage")
 local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
 local disable_blood = minetest.setting_getbool("mobs_disable_blood")
+
 mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
 mobs.remove = minetest.setting_getbool("remove_far_mobs")
 
@@ -1397,6 +1398,7 @@ minetest.register_entity(name, {
 				local obj = minetest.add_entity(p, self.arrow)
 				local amount = (vec.x ^ 2 + vec.y ^ 2 + vec.z ^ 2) ^ 0.5
 				local v = obj:get_luaentity().velocity
+				obj:get_luaentity().switch = 1
 
 				 -- offset makes shoot aim accurate
 				vec.y = vec.y + self.shoot_offset
@@ -1856,6 +1858,7 @@ function mobs:register_arrow(name, def)
 		drop = def.drop or false,
 		collisionbox = {0, 0, 0, 0, 0, 0}, -- remove box around arrows
 		timer = 0,
+		switch = 0,
 
 		on_step = function(self, dtime)
 
@@ -1863,7 +1866,8 @@ function mobs:register_arrow(name, def)
 
 			local pos = self.object:getpos()
 
-			if self.timer > 150
+			if switch == 0
+			or self.timer > 150
 			or not within_limits(pos, 0) then
 
 				self.object:remove() ; -- print ("removed arrow")
@@ -2053,7 +2057,9 @@ end
 -- feeding, taming and breeding (thanks blert2112)
 function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
-	if not self.follow then return false end
+	if not self.follow then
+		return false
+	end
 
 	-- can eat/tame with item in hand
 	if follow_holding(self, clicker) then

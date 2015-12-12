@@ -29,7 +29,7 @@ mobs:register_mob("mobs:chicken", {
 	jump = true,
 	drops = {
 		{name = "mobs:chicken_raw",
-		chance = 1, min = 1, max = 1},
+		chance = 1, min = 2, max = 2},
 	},
 	water_damage = 1,
 	lava_damage = 5,
@@ -144,8 +144,10 @@ local mobs_shoot_egg = function (item, player, pointed_thing)
 		y = playerpos.y +1.5,
 		z = playerpos.z
 	}, "mobs:egg_entity")
+	local ent = obj:get_luaentity()
 	local dir = player:get_look_dir()
-	obj:get_luaentity().velocity = egg_VELOCITY -- needed for api internal timing
+	ent.velocity = egg_VELOGITY -- needed for api internal timing
+	ent.switch = 1
 	obj:setvelocity({
 		x = dir.x * egg_VELOCITY,
 		y = dir.y * egg_VELOCITY,

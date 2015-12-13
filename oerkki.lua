@@ -50,6 +50,6 @@ mobs:register_mob("mobs:oerkki", {
 	replace_offset = -1,
 })
 
-mobs:register_spawn("mobs:oerkki", {"default:stone"}, 5, 0, 7000, 2, -10)
+mobs:register_spawn("mobs:oerkki", {"default:stone"}, 7, 0, 7000, 2, -10)
 
 mobs:register_egg("mobs:oerkki", "Oerkki", "default_obsidian.png", 1)

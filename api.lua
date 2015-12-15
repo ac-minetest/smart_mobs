@@ -1,4 +1,4 @@
--- Mobs Api (14th December 2015)
+-- Mobs Api (15th December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1061,10 +1061,14 @@ minetest.register_entity(name, {
 						z = lp.z - s.z
 					}
 
-					yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+					if vec.x ~= 0
+					and vec.z ~= 0 then
 
-					if lp.x > s.x then
-						yaw = yaw + pi
+						yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
+
+						if lp.x > s.x then
+							yaw = yaw + pi
+						end
 					end
 				else
 					yaw = self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi)
@@ -1123,18 +1127,23 @@ minetest.register_entity(name, {
 					z = lp.z - s.z
 				}
 
-				yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
+				if vec.x ~= 0
+				and vec.z ~= 0 then
 
-				if lp.x > s.x then
-					yaw = yaw + pi
+					yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
+
+					if lp.x > s.x then
+						yaw = yaw + pi
+					end
+
+					self.object:setyaw(yaw)
 				end
-
-				self.object:setyaw(yaw)
 
 			-- otherwise randomly turn
 			elseif math.random(1, 100) <= 30 then
 
 				yaw = self.object:getyaw() + ((math.random(0, 360) - 180) / 180 * pi)
+
 				self.object:setyaw(yaw)
 			end
 

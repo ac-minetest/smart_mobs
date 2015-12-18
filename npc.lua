@@ -46,6 +46,7 @@ mobs:register_mob("mobs:npc", {
 	view_range = 15,
 	owner = "",
 	order = "follow",
+	fear_height = 3,
 	animation = {
 		speed_normal = 30,
 		speed_run = 30,

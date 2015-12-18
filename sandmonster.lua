@@ -32,6 +32,7 @@ mobs:register_mob("mobs:sand_monster", {
 	water_damage = 3,
 	lava_damage = 4,
 	light_damage = 0,
+	fear_height = 3,
 	animation = {
 		speed_normal = 15,
 		speed_run = 15,

@@ -1,4 +1,4 @@
--- Mobs Api (18th December 2015)
+-- Mobs Api (15th December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -234,37 +234,6 @@ function within_limits(pos, radius)
 	return false -- beyond limits
 end
 
--- is mob facing a cliff
-local function is_at_cliff(self)
-
-	if self.fear_height == 0 then -- if 0, no falling protection!
-		return false
-	end
-
-	local yaw = self.object:getyaw()
-	local dir_x = -math.sin(yaw) * (self.collisionbox[4] + 0.5)
-	local dir_z = math.cos(yaw) * (self.collisionbox[4] + 0.5)
-	local pos = self.object:getpos()
-	local ypos = pos.y + self.collisionbox[2] -- just above floor
-
-	for height = self.fear_height, 0, -1 do
-
-		local nod = minetest.get_node_or_nil({
-			x = pos.x + dir_x,
-			y = ypos - height,
-			z = pos.z + dir_z
-		})
-
-		if nod
-		and nod.name
-		and nod.name ~= "air" then
-			return false
-		end
-	end
-
-	return true
-end
-
 -- environmental damage (water, lava, fire, light)
 do_env_damage = function(self)
 
@@ -337,10 +306,9 @@ do_jump = function(self)
 	end
 
 	local pos = self.object:getpos()
-	local temp_Y = pos.y
 
 	-- what is mob standing on?
-	pos.y = (temp_Y + self.collisionbox[2]) - 0.2
+	pos.y = (pos.y + self.collisionbox[2]) - 0.2
 
 	local nod = node_ok(pos)
 
@@ -370,9 +338,6 @@ do_jump = function(self)
 	or self.walk_chance == 0 then
 
 		local v = self.object:getvelocity()
-
-		-- move back a bit - allows jump velocity to carry it forward and succeed better
-		self.object:setpos({x=pos.x - self.direction.x/2, y=temp_Y, z=pos.z - self.direction.z/2})
 
 		v.y = self.jump_height + 1
 		v.x = v.x * 2.2
@@ -635,8 +600,6 @@ minetest.register_entity(name, {
 
 	stepheight = def.stepheight or 0.6,
 	name = name,
-	type = def.type,
-	attack_type = def.attack_type,
 	fly = def.fly,
 	fly_in = def.fly_in or "air",
 	owner = def.owner or "",
@@ -668,6 +631,8 @@ minetest.register_entity(name, {
 	drops = def.drops or {},
 	armor = def.armor,
 	on_rightclick = def.on_rightclick,
+	type = def.type,
+	attack_type = def.attack_type,
 	arrow = def.arrow,
 	shoot_interval = def.shoot_interval,
 	sounds = def.sounds or {},
@@ -703,7 +668,6 @@ minetest.register_entity(name, {
 	child_texture = def.child_texture,
 	docile_by_day = def.docile_by_day or false,
 	time_of_day = 0.5,
-	fear_height = def.fear_height or 0,
 
 	on_step = function(self, dtime)
 
@@ -1117,12 +1081,15 @@ minetest.register_entity(name, {
 			set_animation(self, "stand")
 
 			-- npc's ordered to stand stay standing
-			if self.type ~= "npc"
-			or self.order ~= "stand" then
+			if self.type == "npc"
+			and self.order == "stand" then
 
+				set_velocity(self, 0)
+				self.state = "stand"
+				set_animation(self, "stand")
+			else
 				if self.walk_chance ~= 0
-				and math.random(1, 100) <= self.walk_chance
-				and is_at_cliff(self) == false then
+				and math.random(1, 100) <= self.walk_chance then
 
 					set_velocity(self, self.walk_velocity)
 					self.state = "walk"
@@ -1180,13 +1147,8 @@ minetest.register_entity(name, {
 				self.object:setyaw(yaw)
 			end
 
-			-- stand for great fall in front
-			local temp_is_cliff = is_at_cliff(self)
-
 			-- jump when walking comes to a halt
-			if temp_is_cliff == false
-			and self.jump
-			and get_velocity(self) <= 0.5
+			if self.jump and get_velocity(self) <= 0.5
 			and self.object:getvelocity().y == 0 then
 
 				self.direction = {
@@ -1198,15 +1160,14 @@ minetest.register_entity(name, {
 				do_jump(self)
 			end
 
-			if temp_is_cliff
-			or math.random(1, 100) <= 30 then
+			set_velocity(self, self.walk_velocity)
+			set_animation(self, "walk")
+
+			if math.random(1, 100) <= 30 then
 
 				set_velocity(self, 0)
 				self.state = "stand"
 				set_animation(self, "stand")
-			else
-				set_velocity(self, self.walk_velocity)
-				set_animation(self, "walk")
 			end
 
 		-- attack routines (explode, dogfight, shoot, dogshoot)
@@ -1424,14 +1385,8 @@ minetest.register_entity(name, {
 					do_jump(self)
 				end
 
-				if is_at_cliff(self) then
-
-					set_velocity(self, 0)
-					set_animation(self, "stand")
-				else
-					set_velocity(self, self.run_velocity)
-					set_animation(self, "run")
-				end
+				set_velocity(self, self.run_velocity)
+				set_animation(self, "run")
 
 			else
 

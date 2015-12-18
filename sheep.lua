@@ -14,7 +14,8 @@ for _, col in ipairs(all_colours) do
 		hp_min = 8,
 		hp_max = 10,
 		armor = 200,
-		collisionbox = {-0.4, -1, -0.4, 0.4, 0.3, 0.4},
+		--collisionbox = {-0.4, -1, -0.4, 0.4, 0.3, 0.4},
+		collisionbox = {-0.5, -1, -0.5, 0.5, 0.3, 0.5},
 		visual = "mesh",
 		mesh = "mobs_sheep.b3d",
 		textures = {
@@ -51,6 +52,7 @@ for _, col in ipairs(all_colours) do
 		replace_what = {"default:grass_3", "default:grass_4", "default:grass_5", "farming:wheat_8"},
 		replace_with = "air",
 		replace_offset = -1,
+		fear_height = 3,
 		on_rightclick = function(self, clicker)
 			local shpcolor = string.split(self.name,"_")[2]
 			if shpcolor =="dark" then

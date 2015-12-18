@@ -43,6 +43,7 @@ mobs:register_mob("mobs:dungeon_master", {
 	water_damage = 1,
 	lava_damage = 1,
 	light_damage = 0,
+	fear_height = 3,
 	animation = {
 		stand_start = 0,
 		stand_end = 19,

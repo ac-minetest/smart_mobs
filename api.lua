@@ -247,22 +247,15 @@ local function is_at_cliff(self)
 	local pos = self.object:getpos()
 	local ypos = pos.y + self.collisionbox[2] -- just above floor
 
-	for height = self.fear_height, 0, -1 do
+	if minetest.line_of_sight(
+		{x = pos.x + dir_x, y = ypos, z = pos.z + dir_z},
+		{x = pos.x + dir_x, y = ypos - self.fear_height, z = pos.z + dir_z}
+	, 1) then
 
-		local nod = minetest.get_node_or_nil({
-			x = pos.x + dir_x,
-			y = ypos - height,
-			z = pos.z + dir_z
-		})
-
-		if nod
-		and nod.name
-		and nod.name ~= "air" then
-			return false
-		end
+		return true
 	end
 
-	return true
+	return false
 end
 
 -- environmental damage (water, lava, fire, light)

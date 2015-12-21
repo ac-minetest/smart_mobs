@@ -1,4 +1,4 @@
--- Mobs Api (18th December 2015)
+-- Mobs Api (21st December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1016,7 +1016,7 @@ minetest.register_entity(name, {
 					}
 
 					if vec.x ~= 0
-					and vec.z ~= 0 then
+					or vec.z ~= 0 then
 
 						yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 
@@ -1091,7 +1091,7 @@ minetest.register_entity(name, {
 					}
 
 					if vec.x ~= 0
-					and vec.z ~= 0 then
+					or vec.z ~= 0 then
 
 						yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 
@@ -1154,7 +1154,7 @@ minetest.register_entity(name, {
 				}
 
 				if vec.x ~= 0
-				and vec.z ~= 0 then
+				or vec.z ~= 0 then
 
 					yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
 
@@ -1237,7 +1237,7 @@ minetest.register_entity(name, {
 			}
 
 			if vec.x ~= 0
-			and vec.z ~= 0 then
+			or vec.z ~= 0 then
 
 				yaw = math.atan(vec.z / vec.x) + pi / 2 - self.rotate
 
@@ -1387,7 +1387,7 @@ minetest.register_entity(name, {
 			}
 
 			if vec.x ~= 0
-			and vec.z ~= 0 then
+			or vec.z ~= 0 then
 
 				yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 
@@ -1475,7 +1475,7 @@ minetest.register_entity(name, {
 			}
 
 			if vec.x ~= 0
-			and vec.z ~= 0 then
+			or vec.z ~= 0 then
 
 				yaw = (math.atan(vec.z / vec.x) + pi / 2) - self.rotate
 

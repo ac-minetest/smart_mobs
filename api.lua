@@ -1,4 +1,4 @@
--- Mobs Api (21st December 2015)
+-- Mobs Api (28th December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1621,6 +1621,7 @@ minetest.register_entity(name, {
 
 		-- set anything changed above
 		self.object:set_properties(self)
+		self.object:set_properties({nametag_color = "#FFFF00"})
 	end,
 
 	get_staticdata = function(self)
@@ -1737,7 +1738,8 @@ minetest.register_entity(name, {
 
 		-- attack puncher and call other mobs for help
 		if self.passive == false
-		and not self.tamed then
+		and self.child == false
+		and hitter:get_player_name() ~= self.owner then
 
 			if self.state ~= "attack" then
 				do_attack(self, hitter)
@@ -2172,6 +2174,9 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 	end
 end
 
+local current_obj = {}
+local current_stack = {}
+
 -- feeding, taming and breeding (thanks blert2112)
 function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
@@ -2252,7 +2257,57 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 		end
 
 		return true
-	else
-		return false
 	end
+
+	local item = clicker:get_wielded_item()
+
+	-- if mob has been tamed you can name it with a nametag
+	if item:get_name() == "mobs:nametag"
+	and clicker:get_player_name() == self.owner then
+
+		local player_name = clicker:get_player_name()
+
+		current_obj[player_name] = self
+		current_stack[player_name] = item
+
+		local tag = self.nametag or ""
+
+		local formspec = "size[8,4]"
+			.. default.gui_bg
+			.. default.gui_bg_img
+			.. "field[0.5,1;7.5,0;name;Name:;" .. tag .. "]"
+			.. "button_exit[2.5,3.5;3,1;save_name;Save name]"
+			core.show_formspec(player_name, "mobs_nametag", formspec)
+	end
+
+	return false
+
 end
+
+-- borrowed from blockmen's nametag mod
+minetest.register_on_player_receive_fields(function(player, form_name, fields)
+
+	if form_name ~= "mobs_nametag" or not fields.save_name or fields.name == "" then
+		return
+	end
+
+	local name = player:get_player_name()
+	local obj = current_obj[name]
+
+	if obj and obj.object then
+
+		obj.object:set_properties({nametag = fields.name, nametag_color = "#FFFF00"})
+		obj.nametag = fields.name
+		current_obj[name] = nil
+
+		if not core.setting_getbool("creative_mode") then
+
+			local itemstack = current_stack[name]
+
+			itemstack:take_item()
+			player:set_wielded_item(itemstack)
+		end
+
+		current_stack[name] = nil
+	end
+end)

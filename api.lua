@@ -2172,8 +2172,8 @@ function mobs:capture_mob(self, clicker, chance_hand, chance_net, chance_lasso, 
 	end
 end
 
-local current_obj = {}
-local current_stack = {}
+local mob_obj = {}
+local mob_sta = {}
 
 -- feeding, taming and breeding (thanks blert2112)
 function mobs:feed_tame(self, clicker, feed_count, breed, tame)
@@ -2263,49 +2263,62 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 	if item:get_name() == "mobs:nametag"
 	and clicker:get_player_name() == self.owner then
 
-		local player_name = clicker:get_player_name()
+		local name = clicker:get_player_name()
 
-		current_obj[player_name] = self
-		current_stack[player_name] = item
+		-- store mob and nametag stack in external variable
+		mob_obj[name] = self
+		mob_sta[name] = item
 
 		local tag = self.nametag or ""
 
 		local formspec = "size[8,4]"
 			.. default.gui_bg
 			.. default.gui_bg_img
-			.. "field[0.5,1;7.5,0;name;Name:;" .. tag .. "]"
-			.. "button_exit[2.5,3.5;3,1;save_name;Save name]"
-			core.show_formspec(player_name, "mobs_nametag", formspec)
+			.. "field[0.5,1;7.5,0;name;Enter name and press button:;" .. tag .. "]"
+			.. "button_exit[2.5,3.5;3,1;mob_rename;Rename]"
+			minetest.show_formspec(name, "mobs_nametag", formspec)
 	end
 
 	return false
 
 end
 
--- borrowed from blockmen's nametag mod
-minetest.register_on_player_receive_fields(function(player, form_name, fields)
+-- inspired by blockmen's nametag mod
+minetest.register_on_player_receive_fields(function(player, formname, fields)
 
-	if form_name ~= "mobs_nametag" or not fields.save_name or fields.name == "" then
-		return
-	end
+	-- make sure mob right-clicked with nametag, name entered and button pressed
+	if formname == "mobs_nametag"
+	and fields.mob_rename
+	and fields.name ~= "" then
 
-	local name = player:get_player_name()
-	local obj = current_obj[name]
+		local name = player:get_player_name()
+		local ent = mob_obj[name]
 
-	if obj and obj.object then
+		if not ent
+		or not ent.object then
+			return
+		end
 
-		obj.object:set_properties({nametag = fields.name, nametag_color = "#FFFF00"})
-		obj.nametag = fields.name
-		current_obj[name] = nil
+		-- set nametag and colour (yellow)
+		ent.object:set_properties({
+			nametag = fields.name,
+			nametag_color = "#FFFF00"
+		})
 
-		if not core.setting_getbool("creative_mode") then
+		ent.nametag = fields.name
 
-			local itemstack = current_stack[name]
+		-- take 1 from nametags only when not in creative
+		if not minetest.setting_getbool("creative_mode") then
+
+			local itemstack = mob_sta[name]
 
 			itemstack:take_item()
 			player:set_wielded_item(itemstack)
 		end
 
-		current_stack[name] = nil
+		-- reset external variables
+		mob_obj[name] = nil
+		mob_sta[name] = nil
+
 	end
 end)

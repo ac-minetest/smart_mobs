@@ -1,4 +1,4 @@
--- Mobs Api (28th December 2015)
+-- Mobs Api (31st December 2015)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1668,10 +1668,8 @@ minetest.register_entity(name, {
 
 	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
 
-		-- no punch punch spamming
-		if tflp < 0.45 then
-			return
-		end
+		-- no punch spamming
+		-- if tflp < 0.45 then return end
 
 		-- weapon wear
 		local weapon = hitter:get_wielded_item()

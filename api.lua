@@ -1,4 +1,4 @@
--- Mobs Api (31st December 2015)
+-- Mobs Api (4th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1833,13 +1833,13 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			local mob = minetest.add_entity(pos, name)
 			--local ent = mob:get_luaentity()
 
-			if mob == false then
-				print ("[mobs]" .. name .. " failed to spawn at "
-				.. minetest.pos_to_string(pos))
-			else
+			if mob and mob:get_luaentity() then
 --				print ("[mobs] Spawned " .. name .. " at "
 --				.. minetest.pos_to_string(pos) .. " on "
 --				.. node.name .. " near " .. neighbors[1])
+			else
+				print ("[mobs]" .. name .. " failed to spawn at "
+				.. minetest.pos_to_string(pos))
 			end
 
 		end
@@ -2265,7 +2265,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
 		local name = clicker:get_player_name()
 
-		-- store mob and nametag stack in external variable
+		-- store mob and nametag stack in external variables
 		mob_obj[name] = self
 		mob_sta[name] = item
 

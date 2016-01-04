@@ -149,6 +149,32 @@ function effect(pos, amount, texture, max_size)
 	})
 end
 
+-- update nametag and colour
+function update_tag(self)
+
+	local col = "#00FF00"
+	local qua = self.hp_max / 4
+
+	if self.health <= math.floor(qua * 3) then
+		col = "#FFFF00"
+	end
+
+	if self.health <= math.floor(qua * 2) then
+		col = "#FF6600"
+	end
+
+	if self.health <= math.floor(qua) then
+		col = "#FF0000"
+	end
+
+	self.object:set_properties({
+		nametag = self.nametag,
+		nametag_color = col
+	})
+
+end
+
+-- check if mob is dead or only hurt
 function check_for_death(self)
 
 	-- return if no change
@@ -173,6 +199,8 @@ function check_for_death(self)
 				max_hear_distance = self.sounds.distance
 			})
 		end
+
+		update_tag(self)
 
 		return false
 	end
@@ -339,16 +367,20 @@ do_jump = function(self)
 
 --print ("standing on:", nod.name, pos.y)
 
-	if minetest.registered_nodes[nod.name].walkable == false
-	or not self.direction then
+	if minetest.registered_nodes[nod.name].walkable == false then
 		return
 	end
 
+	-- where is front
+	local yaw = self.object:getyaw()
+	local dir_x = -math.sin(yaw) * (self.collisionbox[4] + 0.5)
+	local dir_z = math.cos(yaw) * (self.collisionbox[4] + 0.5)
+
 	-- what is in front of mob?
 	local nod = node_ok({
-		x = pos.x + self.direction.x,
+		x = pos.x + dir_x,
 		y = pos.y + 0.5,
-		z = pos.z + self.direction.z
+		z = pos.z + dir_z
 	})
 
 	-- thin blocks that do not need to be jumped
@@ -365,7 +397,7 @@ do_jump = function(self)
 		local v = self.object:getvelocity()
 
 		-- move back a bit - allows jump velocity to carry it forward and succeed better
-		self.object:setpos({x=pos.x - self.direction.x/2, y=temp_Y, z=pos.z - self.direction.z/2})
+		--self.object:setpos({x=pos.x - self.direction.x/2, y=temp_Y, z=pos.z - self.direction.z/2})
 
 		v.y = self.jump_height + 1
 		v.x = v.x * 2.2
@@ -381,6 +413,9 @@ do_jump = function(self)
 				max_hear_distance = self.sounds.distance
 			})
 		end
+	else
+		self.state = "stand"
+		set_animation(self, "stand")
 	end
 end
 
@@ -1037,11 +1072,11 @@ minetest.register_entity(name, {
 						or (self.object:getvelocity().y == 0
 						and self.jump_chance > 0) then
 
-							self.direction = {
-								x = math.sin(yaw) * -1,
-								y = 0,
-								z = math.cos(yaw)
-							}
+--							self.direction = {
+--								x = math.sin(yaw) * -1,
+--								y = 0,
+--								z = math.cos(yaw)
+--							}
 
 							do_jump(self)
 						end
@@ -1182,11 +1217,11 @@ minetest.register_entity(name, {
 			and get_velocity(self) <= 0.5
 			and self.object:getvelocity().y == 0 then
 
-				self.direction = {
-					x = math.sin(yaw) * -1,
-					y = 0,
-					z = math.cos(yaw)
-				}
+--				self.direction = {
+--					x = math.sin(yaw) * -1,
+--					y = 0,
+--					z = math.cos(yaw)
+--				}
 
 				do_jump(self)
 			end
@@ -1329,7 +1364,6 @@ minetest.register_entity(name, {
 		elseif self.attack_type == "dogfight"
 		or (self.attack_type == "dogshoot" and dist <= self.reach) then
 
-			-- fly bit modified from BlockMens creatures mod
 			if self.fly
 			and dist > self.reach then
 
@@ -1378,7 +1412,6 @@ minetest.register_entity(name, {
 				end
 
 			end
-			-- end fly bit
 
 			local vec = {
 				x = p.x - s.x,
@@ -1408,11 +1441,11 @@ minetest.register_entity(name, {
 				or (self.object:getvelocity().y == 0
 				and self.jump_chance > 0) then
 
-					self.direction = {
-						x = math.sin(yaw) * -1,
-						y = 0,
-						z = math.cos(yaw)
-					}
+--					self.direction = {
+--						x = math.sin(yaw) * -1,
+--						y = 0,
+--						z = math.cos(yaw)
+--					}
 
 					do_jump(self)
 				end
@@ -2215,6 +2248,8 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 		self.object:set_hp(hp)
 		self.health = hp
 
+		update_tag(self)
+
 		-- make children grow quicker
 		if self.child == true then
 
@@ -2299,13 +2334,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 			return
 		end
 
-		-- set nametag and colour (yellow)
-		ent.object:set_properties({
-			nametag = fields.name,
-			nametag_color = "#FFFF00"
-		})
-
+		-- update nametag
 		ent.nametag = fields.name
+
+		update_tag(ent)
 
 		-- take 1 from nametags only when not in creative
 		if not minetest.setting_getbool("creative_mode") then

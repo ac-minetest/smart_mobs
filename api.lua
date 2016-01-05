@@ -1801,6 +1801,12 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 	if new_chance ~= nil then
 		chance = new_chance
 		print ("[Mobs Redo] Chance setting for " .. name .. " is now " .. chance)
+
+		if chance == 0 then
+			print("[Mobs Redo] " .. name .. " has spawning disabled")
+			return
+		end
+
 	end
 
 	minetest.register_abm({

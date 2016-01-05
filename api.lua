@@ -1,4 +1,4 @@
--- Mobs Api (4th January 2016)
+-- Mobs Api (5th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -6,6 +6,7 @@ mobs.mod = "redo"
 local damage_enabled = minetest.setting_getbool("enable_damage")
 local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
 local disable_blood = minetest.setting_getbool("mobs_disable_blood")
+local creative = minetest.setting_getbool("creative_mode")
 
 mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
 mobs.remove = minetest.setting_getbool("remove_far_mobs")
@@ -1217,12 +1218,6 @@ minetest.register_entity(name, {
 			and get_velocity(self) <= 0.5
 			and self.object:getvelocity().y == 0 then
 
---				self.direction = {
---					x = math.sin(yaw) * -1,
---					y = 0,
---					z = math.cos(yaw)
---				}
-
 				do_jump(self)
 			end
 
@@ -1440,12 +1435,6 @@ minetest.register_entity(name, {
 				and self.object:getvelocity().y == 0)
 				or (self.object:getvelocity().y == 0
 				and self.jump_chance > 0) then
-
---					self.direction = {
---						x = math.sin(yaw) * -1,
---						y = 0,
---						z = math.cos(yaw)
---					}
 
 					do_jump(self)
 				end
@@ -2118,7 +2107,7 @@ function mobs:register_egg(mob, desc, background, addegg)
 				end
 
 				-- if not in creative then take item
-				if not minetest.setting_getbool("creative_mode") then
+				if not creative then
 					itemstack:take_item()
 				end
 			end
@@ -2218,8 +2207,8 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 	-- can eat/tame with item in hand
 	if follow_holding(self, clicker) then
 
-		-- take item
-		if not minetest.setting_getbool("creative_mode") then
+		-- if not in creative then take item
+		if not creative then
 
 			local item = clicker:get_wielded_item()
 
@@ -2321,7 +2310,7 @@ end
 -- inspired by blockmen's nametag mod
 minetest.register_on_player_receive_fields(function(player, formname, fields)
 
-	-- make sure mob right-clicked with nametag, name entered and button pressed
+	-- right-clicked with nametag, name entered and button pressed?
 	if formname == "mobs_nametag"
 	and fields.mob_rename
 	and fields.name ~= "" then
@@ -2336,11 +2325,10 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 		-- update nametag
 		ent.nametag = fields.name
-
 		update_tag(ent)
 
-		-- take 1 from nametags only when not in creative
-		if not minetest.setting_getbool("creative_mode") then
+		-- if not in creative then take item
+		if not creative then
 
 			local itemstack = mob_sta[name]
 

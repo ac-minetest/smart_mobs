@@ -40,7 +40,9 @@ mobs:register_mob("mobs:kitten", {
 	follow = {"mobs:rat", "ethereal:fish_raw"},
 	view_range = 8,
 	on_rightclick = function(self, clicker)
-		mobs:feed_tame(self, clicker, 4, true, true)
+		if mobs:feed_tame(self, clicker, 4, true, true) then
+			return
+		end
 		mobs:capture_mob(self, clicker, 50, 50, 90, false, nil)
 	end
 })

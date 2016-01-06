@@ -45,25 +45,35 @@ mobs:register_mob("mobs:bunny", {
 	replace_what = {"farming:carrot_7", "farming:carrot_8", "farming_plus:carrot"},
 	replace_with = "air",
 	on_rightclick = function(self, clicker)
-		if not mobs:feed_tame(self, clicker, 4, true, true) then
-			-- Monty Python tribute
-			local item = clicker:get_wielded_item()
-			if item:get_name() == "mobs:lava_orb" then
-				if not minetest.setting_getbool("creative_mode") then
-					item:take_item()
-					clicker:set_wielded_item(item)
-				end
-				self.object:set_properties({
-					textures = {"mobs_bunny_evil.png"},
-				})
-				self.type = "monster"
-				self.object:set_hp(20)
-				return
+
+		-- feed or tame
+		if mobs:feed_tame(self, clicker, 4, true, true) then
+			return
+		end
+
+		-- Monty Python tribute
+		local item = clicker:get_wielded_item()
+
+		if item:get_name() == "mobs:lava_orb" then
+
+			if not minetest.setting_getbool("creative_mode") then
+				item:take_item()
+				clicker:set_wielded_item(item)
 			end
+
+			self.object:set_properties({
+				textures = {"mobs_bunny_evil.png"},
+			})
+
+			self.type = "monster"
+			self.object:set_hp(20)
+
+			return
 		end
 
 		mobs:capture_mob(self, clicker, 30, 50, 80, false, nil)
 	end,
+
 	attack_type = "dogfight",
 	damage = 5,
 })

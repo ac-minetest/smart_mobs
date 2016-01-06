@@ -104,7 +104,10 @@ for _, col in ipairs(all_colours) do
 
 			--are we coloring?
 			if itemname:find("dye:") then
-				if self.gotten == false and self.child == false and self.tamed == true and name == self.owner then
+				if self.gotten == false
+				and self.child == false
+				and self.tamed == true
+				and name == self.owner then
 					local col = string.split(itemname,":")[2]
 					for _,c in pairs(all_colours) do
 						if c == col then

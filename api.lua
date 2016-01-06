@@ -1,4 +1,4 @@
--- Mobs Api (5th January 2016)
+-- Mobs Api (6th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -2223,25 +2223,24 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 			clicker:set_wielded_item(item)
 		end
 
-		-- heal health
-		local hp = self.object:get_hp() + 4
+		-- increase health
+		self.health = self.health + 4
 
-		if hp >= self.hp_max then
+		if self.health >= self.hp_max then
 
-			hp = self.hp_max
+			self.health = self.hp_max
 
 			if self.htimer < 1 then
 
 				minetest.chat_send_player(clicker:get_player_name(),
 					self.name:split(":")[2]
-					.. " at full health (" .. tostring(hp) .. ")")
+					.. " at full health (" .. tostring(self.health) .. ")")
 
 				self.htimer = 5
 			end
 		end
 
-		self.object:set_hp(hp)
-		self.health = hp
+		self.object:set_hp(self.health)
 
 		update_tag(self)
 
@@ -2255,7 +2254,7 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 
 		-- feed and tame
 		self.food = (self.food or 0) + 1
-		if self.food == feed_count then
+		if self.food >= feed_count then
 
 			self.food = 0
 
@@ -2266,6 +2265,12 @@ function mobs:feed_tame(self, clicker, feed_count, breed, tame)
 			self.gotten = false
 
 			if tame then
+
+				if self.tamed == false then
+					minetest.chat_send_player(clicker:get_player_name(),
+						self.name:split(":")[2]
+						.. " has been tamed!")
+				end
 
 				self.tamed = true
 

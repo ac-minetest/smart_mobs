@@ -415,8 +415,10 @@ do_jump = function(self)
 			})
 		end
 	else
-		self.state = "stand"
-		set_animation(self, "stand")
+		if self.state ~= "attack" then
+			self.state = "stand"
+			set_animation(self, "stand")
+		end
 	end
 end
 

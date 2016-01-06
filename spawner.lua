@@ -115,6 +115,8 @@ minetest.register_abm({
 			local pos2 = air[math.random(#air)]
 			local lig = minetest.get_node_light(pos2)
 
+			pos2.y = pos2.y + 0.5
+
 			-- only if light levels are within range
 			if lig and lig >= mlig and lig <= xlig then
 				minetest.add_entity(pos2, mob)

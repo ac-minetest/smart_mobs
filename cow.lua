@@ -62,8 +62,14 @@ mobs:register_mob("mobs:cow", {
 		-- milk cow with empty bucket
 		if tool:get_name() == "bucket:bucket_empty" then
 
-			if self.gotten == true
-			or self.child == true then
+			--if self.gotten == true
+			if self.child == true then
+				return
+			end
+
+			if self.gotten == true then
+				minetest.chat_send_player(clicker:get_player_name(),
+						"Cow already milked!")
 				return
 			end
 

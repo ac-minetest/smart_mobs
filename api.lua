@@ -1,4 +1,4 @@
--- Mobs Api (6th January 2016)
+-- Mobs Api (7th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -14,6 +14,7 @@ mobs.remove = minetest.setting_getbool("remove_far_mobs")
 -- internal functions
 
 local pi = math.pi
+local square = math.sqrt
 
 do_attack = function(self, player)
 
@@ -57,7 +58,7 @@ get_velocity = function(self)
 
 	local v = self.object:getvelocity()
 
-	return (v.x ^ 2 + v.z ^ 2) ^ (0.5)
+	return (v.x * v.x + v.z * v.z) ^ 0.5
 end
 
 set_animation = function(self, type)
@@ -209,7 +210,7 @@ function check_for_death(self)
 	-- drop items when dead
 	local obj
 
-	for _,drop in ipairs(self.drops) do
+	for _,drop in pairs(self.drops) do
 
 		if math.random(1, drop.chance) == 1 then
 
@@ -317,11 +318,12 @@ do_env_damage = function(self)
 		effect(pos, 5, "tnt_smoke.png")
 	end
 
-	if self.water_damage ~= 0 or self.lava_damage ~= 0 then
+	if self.water_damage ~= 0
+	or self.lava_damage ~= 0 then
 
-		pos.y = (pos.y + self.collisionbox[2]) + 0.1 -- foot level
+		pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
 
-		local nod = node_ok(pos, "air") ;  -- print ("standing in "..nod.name)
+		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod.name)
 		local nodef = minetest.registered_nodes[nod.name]
 
 		pos.y = pos.y + 1
@@ -359,10 +361,9 @@ do_jump = function(self)
 	end
 
 	local pos = self.object:getpos()
-	local temp_Y = pos.y
 
 	-- what is mob standing on?
-	pos.y = (temp_Y + self.collisionbox[2]) - 0.2
+	pos.y = pos.y + self.collisionbox[2] - 0.2
 
 	local nod = node_ok(pos)
 
@@ -397,9 +398,6 @@ do_jump = function(self)
 
 		local v = self.object:getvelocity()
 
-		-- move back a bit - allows jump velocity to carry it forward and succeed better
-		--self.object:setpos({x=pos.x - self.direction.x/2, y=temp_Y, z=pos.z - self.direction.z/2})
-
 		v.y = self.jump_height + 1
 		v.x = v.x * 2.2
 		v.z = v.z * 2.2
@@ -422,6 +420,14 @@ do_jump = function(self)
 	end
 end
 
+-- this is a faster way to calculate distance
+local get_distance = function(a, b)
+
+	local x, y, z = a.x - b.x, a.y - b.y, a.z - b.z
+
+	return square(x * x + y * y + z * z)
+end
+
 -- blast damage to entities nearby (modified from TNT mod)
 function entity_physics(pos, radius)
 
@@ -433,7 +439,8 @@ function entity_physics(pos, radius)
 	for _, obj in pairs(objs) do
 
 		obj_pos = obj:getpos()
-		dist = math.max(1, vector.distance(pos, obj_pos))
+
+		dist = math.max(1, get_distance(pos, obj_pos))
 
 		local damage = math.floor((4 / dist) * radius)
 		obj:set_hp(obj:get_hp() - damage)
@@ -539,7 +546,7 @@ local function breed(self)
 		local num = 0
 		local ent = nil
 
-		for i, obj in ipairs(ents) do
+		for i, obj in pairs(ents) do
 
 			ent = obj:get_luaentity()
 
@@ -900,7 +907,7 @@ minetest.register_entity(name, {
 			local min_dist = self.view_range + 1
 			local min_player = nil
 
-			for _,oir in ipairs(minetest.get_objects_inside_radius(s, self.view_range)) do
+			for _,oir in pairs(minetest.get_objects_inside_radius(s, self.view_range)) do
 
 				if oir:is_player() then
 
@@ -921,10 +928,12 @@ minetest.register_entity(name, {
 					s = self.object:getpos()
 					p = player:getpos()
 					sp = s
+
 					-- aim higher to make looking up hills more realistic
 					p.y = p.y + 1
 					sp.y = sp.y + 1
-					dist = vector.distance(p, s)
+
+					dist = get_distance(p, s)
 
 					if dist < self.view_range then
 					-- field of view check goes here
@@ -965,7 +974,7 @@ minetest.register_entity(name, {
 					-- attack monster
 					p = obj.object:getpos()
 
-					dist = vector.distance(p, s)
+					dist = get_distance(p, s)
 
 					if dist < min_dist then
 						min_dist = dist
@@ -994,7 +1003,7 @@ minetest.register_entity(name, {
 
 				s = self.object:getpos()
 				p = player:getpos()
-				dist = vector.distance(p, s)
+				dist = get_distance(p, s)
 
 				if dist < self.view_range then
 					self.following = player
@@ -1041,7 +1050,7 @@ minetest.register_entity(name, {
 
 			if p then
 
-				local dist = vector.distance(p, s)
+				local dist = get_distance(p, s)
 
 				-- dont follow if out of range
 				if dist > self.view_range then
@@ -1075,12 +1084,6 @@ minetest.register_entity(name, {
 						or (self.object:getvelocity().y == 0
 						and self.jump_chance > 0) then
 
---							self.direction = {
---								x = math.sin(yaw) * -1,
---								y = 0,
---								z = math.cos(yaw)
---							}
-
 							do_jump(self)
 						end
 
@@ -1110,7 +1113,7 @@ minetest.register_entity(name, {
 
 					local o = minetest.get_objects_inside_radius(self.object:getpos(), 3)
 
-					for _,o in ipairs(o) do
+					for _,o in pairs(o) do
 
 						if o:is_player() then
 							lp = o:getpos()
@@ -1240,7 +1243,7 @@ minetest.register_entity(name, {
 		-- calculate distance from mob and enemy
 		local s = self.object:getpos()
 		local p = self.attack:getpos() or s
-		local dist = vector.distance(p, s)
+		local dist = get_distance(p, s)
 
 		-- stop attacking if player or out of range
 		if dist > self.view_range
@@ -1491,7 +1494,7 @@ minetest.register_entity(name, {
 			p.y = p.y - .5
 			s.y = s.y + .5
 
-			local dist = vector.distance(p, s)
+			local dist = get_distance(p, s)
 			local vec = {
 				x = p.x - s.x,
 				y = p.y - s.y,
@@ -1645,7 +1648,7 @@ minetest.register_entity(name, {
 
 		-- set anything changed above
 		self.object:set_properties(self)
-		self.object:set_properties({nametag_color = "#FFFF00"})
+		update_tag(self)
 	end,
 
 	get_staticdata = function(self)
@@ -1691,9 +1694,6 @@ minetest.register_entity(name, {
 	end,
 
 	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
-
-		-- no punch spamming
-		-- if tflp < 0.45 then return end
 
 		-- weapon wear
 		local weapon = hitter:get_wielded_item()
@@ -1817,7 +1817,6 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 		neighbors = neighbors,
 		interval = interval,
 		chance = chance,
-		--catch_up = false,
 
 		action = function(pos, node, _, active_object_count_wider)
 
@@ -1861,7 +1860,6 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			pos.y = pos.y - 0.5
 
 			local mob = minetest.add_entity(pos, name)
-			--local ent = mob:get_luaentity()
 
 			if mob and mob:get_luaentity() then
 --				print ("[mobs] Spawned " .. name .. " at "

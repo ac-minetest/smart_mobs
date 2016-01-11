@@ -28,6 +28,7 @@ This mod contains the following additions:
 
 Changelog:
 
+1.24- Added feature where certain animals run away when punched (runaway = true in mob definition)
 1.23- Added mob spawner block for admin to setup spawners in-game (place and right click to enter settings)
 1.22- Added ability to name tamed animals and npc using nametags, also npc will attack anyone who punches them apart from owner
 1.21- Added some more error checking to reduce serialize.h error and added height checks for falling off cliffs (thanks cmdskp)

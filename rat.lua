@@ -19,6 +19,8 @@ mobs:register_mob("mobs:rat", {
 		random = "mobs_rat",
 	},
 	walk_velocity = 1,
+	run_velocity = 2,
+	runaway = true,
 	jump = true,
 	water_damage = 0,
 	lava_damage = 4,

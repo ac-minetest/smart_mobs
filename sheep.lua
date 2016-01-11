@@ -6,7 +6,7 @@ local all_colours = {
 
 -- Sheep by PilzAdam
 
-for _, col in ipairs(all_colours) do
+for _, col in pairs(all_colours) do
 
 	mobs:register_mob("mobs:sheep_"..col, {
 		type = "animal",
@@ -28,6 +28,8 @@ for _, col in ipairs(all_colours) do
 			random = "mobs_sheep",
 		},
 		walk_velocity = 1,
+		run_velocity = 2,
+		runaway = true,
 		jump = true,
 		drops = {
 			{name = "mobs:meat_raw",

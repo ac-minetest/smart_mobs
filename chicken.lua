@@ -26,6 +26,8 @@ mobs:register_mob("mobs:chicken", {
 		random = "mobs_chicken",
 	},
 	walk_velocity = 1,
+	run_velocity = 3,
+	runaway = true,
 	jump = true,
 	drops = {
 		{name = "mobs:chicken_raw",

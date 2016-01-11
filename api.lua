@@ -1,4 +1,4 @@
--- Mobs Api (7th January 2016)
+-- Mobs Api (11th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -494,20 +494,6 @@ end
 
 local function breed(self)
 
-	-- horny animal can mate for 40 seconds,
-	-- afterwards horny animal cannot mate again for 200 seconds
-	if self.horny == true
-	and self.hornytimer < 240
-	and self.child == false then
-
-		self.hornytimer = self.hornytimer + 1
-
-		if self.hornytimer >= 240 then
-			self.hornytimer = 0
-			self.horny = false
-		end
-	end
-
 	-- child take 240 seconds before growing into adult
 	if self.child == true then
 
@@ -531,6 +517,21 @@ local function breed(self)
 				y = self.jump_height,
 				z = 0
 			})
+		end
+
+		return
+	end
+
+	-- horny animal can mate for 40 seconds,
+	-- afterwards horny animal cannot mate again for 200 seconds
+	if self.horny == true
+	and self.hornytimer < 240 then
+
+		self.hornytimer = self.hornytimer + 1
+
+		if self.hornytimer >= 240 then
+			self.hornytimer = 0
+			self.horny = false
 		end
 	end
 
@@ -742,6 +743,8 @@ minetest.register_entity(name, {
 	docile_by_day = def.docile_by_day or false,
 	time_of_day = 0.5,
 	fear_height = def.fear_height or 0,
+runaway = def.runaway,
+runaway_timer = 0,
 
 	on_step = function(self, dtime)
 
@@ -858,7 +861,7 @@ minetest.register_entity(name, {
 
 		-- mob plays random sound at times
 		if self.sounds.random
-		and math.random(1, 100) <= 1 then
+		and math.random(1, 100) == 1 then
 
 			minetest.sound_play(self.sounds.random, {
 				object = self.object,
@@ -869,25 +872,14 @@ minetest.register_entity(name, {
 		-- environmental damage timer (every 1 second)
 		self.env_damage_timer = self.env_damage_timer + dtime
 
-		if self.state == "attack"
-		and self.env_damage_timer > 1 then
+		if (self.state == "attack" and self.env_damage_timer > 1)
+		or self.state ~= "attack" then
 
 			self.env_damage_timer = 0
 
 			do_env_damage(self)
 
 			-- custom function (defined in mob lua file)
-			if self.do_custom then
-				self.do_custom(self)
-			end
-
-		elseif self.state ~= "attack" then
-
-			self.env_damage_timer = 0
-
-			do_env_damage(self)
-
-			-- custom function
 			if self.do_custom then
 				self.do_custom(self)
 			end
@@ -947,6 +939,7 @@ minetest.register_entity(name, {
 					end
 				end
 			end
+
 			-- attack player
 			if min_player then
 				do_attack(self, min_player)
@@ -995,7 +988,8 @@ minetest.register_entity(name, {
 		if (self.follow ~= ""
 		or self.order == "follow")
 		and not self.following
-		and self.state ~= "attack" then
+		and self.state ~= "attack"
+and self.state ~= "runaway" then
 
 			local s, p, dist
 
@@ -1237,6 +1231,31 @@ minetest.register_entity(name, {
 				set_animation(self, "walk")
 			end
 
+		-- runaway when punched
+		elseif self.state == "runaway" then
+
+			self.runaway_timer = self.runaway_timer + 1
+
+			-- stop after 3 seconds or when at cliff
+			if self.runaway_timer > 3
+			or is_at_cliff(self) then
+				self.runaway_timer = 0
+				set_velocity(self, 0)
+				self.state = "stand"
+				set_animation(self, "stand")
+			else
+				set_velocity(self, self.run_velocity)
+				set_animation(self, "walk")
+			end
+
+			-- jump when walking comes to a halt
+			if self.jump
+			and get_velocity(self) <= 0.5
+			and self.object:getvelocity().y == 0 then
+
+				do_jump(self)
+			end
+
 		-- attack routines (explode, dogfight, shoot, dogshoot)
 		elseif self.state == "attack" then
 
@@ -1332,6 +1351,7 @@ minetest.register_entity(name, {
 					-- hurt player/mobs caught in blast area
 					entity_physics(pos, 3)
 
+					-- dont damage anything if area protected or next to water
 					if minetest.find_node_near(pos, 1, {"group:water"})
 					or minetest.is_protected(pos, "") then
 
@@ -1555,6 +1575,128 @@ minetest.register_entity(name, {
 		end -- END if self.state == "attack"
 	end,
 
+	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
+
+		-- weapon wear
+		local weapon = hitter:get_wielded_item()
+		local punch_interval = 1.4
+
+		if tool_capabilities then
+			punch_interval = tool_capabilities.full_punch_interval or 1.4
+		end
+
+		if weapon:get_definition()
+		and weapon:get_definition().tool_capabilities then
+
+			weapon:add_wear(math.floor((punch_interval / 75) * 9000))
+			hitter:set_wielded_item(weapon)
+		end
+
+		-- weapon sounds
+		if weapon:get_definition().sounds ~= nil then
+
+			local s = math.random(0, #weapon:get_definition().sounds)
+
+			minetest.sound_play(weapon:get_definition().sounds[s], {
+				object = hitter,
+				max_hear_distance = 8
+			})
+		else
+			minetest.sound_play("default_punch", {
+				object = hitter,
+				max_hear_distance = 5
+			})
+		end
+
+		-- exit here if dead
+		if check_for_death(self) then
+			return
+		end
+
+		-- blood_particles
+		if self.blood_amount > 0
+		and not disable_blood then
+
+			local pos = self.object:getpos()
+
+			pos.y = pos.y + (-self.collisionbox[2] + self.collisionbox[5]) / 2
+
+			effect(pos, self.blood_amount, self.blood_texture)
+		end
+
+		-- knock back effect
+		if self.knock_back > 0 then
+
+			local v = self.object:getvelocity()
+			local r = 1.4 - math.min(punch_interval, 1.4)
+			local kb = r * 5
+
+			self.object:setvelocity({
+				x = dir.x * kb,
+				y = 2,
+				z = dir.z * kb
+			})
+
+			self.pause_timer = r
+		end
+
+		-- if skittish then run away
+		if self.runaway == true then
+
+			local lp = hitter:getpos()
+			local s = self.object:getpos()
+
+			local vec = {
+				x = lp.x - s.x,
+				y = lp.y - s.y,
+				z = lp.z - s.z
+			}
+
+			if vec.x ~= 0
+			or vec.z ~= 0 then
+
+				local yaw = math.atan(vec.z / vec.x) + 3 * pi / 2 - self.rotate
+
+				if lp.x > s.x then
+					yaw = yaw + pi
+				end
+
+				self.object:setyaw(yaw)
+			end
+
+			self.state = "runaway"
+			self.runaway_timer = 0
+			self.following = nil
+		end
+
+
+		-- attack puncher and call other mobs for help
+		if self.passive == false
+		and self.child == false
+		and hitter:get_player_name() ~= self.owner then
+
+			if self.state ~= "attack" then
+				do_attack(self, hitter)
+			end
+
+			-- alert others to the attack
+			local obj = nil
+
+			for _, oir in pairs(minetest.get_objects_inside_radius(hitter:getpos(), 5)) do
+
+				obj = oir:get_luaentity()
+
+				if obj then
+
+					if obj.group_attack == true
+					and obj.state ~= "attack" then
+						do_attack(obj, hitter)
+					end
+				end
+			end
+		end
+	end,
+
 	on_activate = function(self, staticdata, dtime_s)
 
 		-- remove monsters if playing on peaceful
@@ -1693,97 +1835,6 @@ minetest.register_entity(name, {
 		return minetest.serialize(tmp)
 	end,
 
-	on_punch = function(self, hitter, tflp, tool_capabilities, dir)
-
-		-- weapon wear
-		local weapon = hitter:get_wielded_item()
-		local punch_interval = 1.4
-
-		if tool_capabilities then
-			punch_interval = tool_capabilities.full_punch_interval or 1.4
-		end
-
-		if weapon:get_definition()
-		and weapon:get_definition().tool_capabilities then
-
-			weapon:add_wear(math.floor((punch_interval / 75) * 9000))
-			hitter:set_wielded_item(weapon)
-		end
-
-		-- weapon sounds
-		if weapon:get_definition().sounds ~= nil then
-
-			local s = math.random(0, #weapon:get_definition().sounds)
-
-			minetest.sound_play(weapon:get_definition().sounds[s], {
-				object = hitter,
-				max_hear_distance = 8
-			})
-		else
-			minetest.sound_play("default_punch", {
-				object = hitter,
-				max_hear_distance = 5
-			})
-		end
-
-		-- exit here if dead
-		if check_for_death(self) then
-			return
-		end
-
-		-- blood_particles
-		if self.blood_amount > 0
-		and not disable_blood then
-
-			local pos = self.object:getpos()
-
-			pos.y = pos.y + (-self.collisionbox[2] + self.collisionbox[5]) / 2
-
-			effect(pos, self.blood_amount, self.blood_texture)
-		end
-
-		-- knock back effect
-		if self.knock_back > 0 then
-
-			local v = self.object:getvelocity()
-			local r = 1.4 - math.min(punch_interval, 1.4)
-			local kb = r * 5
-
-			self.object:setvelocity({
-				x = dir.x * kb,
-				y = 2,
-				z = dir.z * kb
-			})
-
-			self.pause_timer = r
-		end
-
-		-- attack puncher and call other mobs for help
-		if self.passive == false
-		and self.child == false
-		and hitter:get_player_name() ~= self.owner then
-
-			if self.state ~= "attack" then
-				do_attack(self, hitter)
-			end
-
-			-- alert others to the attack
-			local obj = nil
-
-			for _, oir in pairs(minetest.get_objects_inside_radius(hitter:getpos(), 5)) do
-
-				obj = oir:get_luaentity()
-
-				if obj then
-
-					if obj.group_attack == true
-					and obj.state ~= "attack" then
-						do_attack(obj, hitter)
-					end
-				end
-			end
-		end
-	end,
 })
 
 end -- END mobs:register_mob function

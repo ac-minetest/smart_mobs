@@ -21,6 +21,7 @@ mobs:register_mob("mobs:bunny", {
 	makes_footstep_sound = false,
 	walk_velocity = 1,
 	run_velocity = 2,
+	runaway = true,
 	jump = true,
 	drops = {
 		{name = "mobs:meat_raw",

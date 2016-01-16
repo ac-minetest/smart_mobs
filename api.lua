@@ -1,4 +1,4 @@
--- Mobs Api (11th January 2016)
+-- Mobs Api (16th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -1168,7 +1168,7 @@ and self.state ~= "runaway" then
 			and self.fly_in == "default:water_source"
 			and not lp then
 
-				print ("out of water")
+				--print ("out of water")
 
 				set_velocity(self, 0)
 
@@ -1632,9 +1632,9 @@ and self.state ~= "runaway" then
 			local kb = r * 5
 
 			self.object:setvelocity({
-				x = dir.x * kb,
+				x = (dir.x or 0) * kb,
 				y = 2,
-				z = dir.z * kb
+				z = (dir.z or 0) * kb
 			})
 
 			self.pause_timer = r
@@ -1852,13 +1852,15 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 	local new_chance = tonumber(minetest.setting_get(name .. "_chance"))
 
 	if new_chance ~= nil then
-		chance = new_chance
-		print ("[Mobs Redo] Chance setting for " .. name .. " is now " .. chance)
 
 		if chance == 0 then
 			print("[Mobs Redo] " .. name .. " has spawning disabled")
 			return
 		end
+
+		chance = new_chance
+
+		print ("[Mobs Redo] Chance setting for " .. name .. " is now " .. chance)
 
 	end
 

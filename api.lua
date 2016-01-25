@@ -1,4 +1,4 @@
--- Mobs Api (16th January 2016)
+-- Mobs Api (25th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -7,9 +7,8 @@ local damage_enabled = minetest.setting_getbool("enable_damage")
 local peaceful_only = minetest.setting_getbool("only_peaceful_mobs")
 local disable_blood = minetest.setting_getbool("mobs_disable_blood")
 local creative = minetest.setting_getbool("creative_mode")
-
-mobs.protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
-mobs.remove = minetest.setting_getbool("remove_far_mobs")
+local spawn_protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
+local remove_far = minetest.setting_getbool("remove_far_mobs")
 
 -- internal functions
 
@@ -79,8 +78,8 @@ set_animation = function(self, type)
 			self.object:set_animation({
 				x = self.animation.stand_start,
 				y = self.animation.stand_end},
-
 				self.animation.speed_normal, 0)
+
 			self.animation.current = "stand"
 		end
 
@@ -151,7 +150,7 @@ function effect(pos, amount, texture, max_size)
 	})
 end
 
--- update nametag and colour
+-- update nametag colour
 function update_tag(self)
 
 	local col = "#00FF00"
@@ -186,8 +185,6 @@ function check_for_death(self)
 		return false
 	end
 
-	local pos = self.object:getpos()
-
 	-- still got some health? play hurt sound
 	if hp > 0 then
 
@@ -196,7 +193,7 @@ function check_for_death(self)
 		if self.sounds.damage then
 
 			minetest.sound_play(self.sounds.damage,{
-				pos = pos,
+				object = self.object,
 				gain = 1.0,
 				max_hear_distance = self.sounds.distance
 			})
@@ -209,6 +206,7 @@ function check_for_death(self)
 
 	-- drop items when dead
 	local obj
+	local pos = self.object:getpos()
 
 	for _,drop in pairs(self.drops) do
 
@@ -233,7 +231,7 @@ function check_for_death(self)
 	if self.sounds.death then
 
 		minetest.sound_play(self.sounds.death,{
-			pos = pos,
+			object = self.object,
 			gain = 1.0,
 			max_hear_distance = self.sounds.distance
 		})
@@ -407,7 +405,7 @@ do_jump = function(self)
 		if self.sounds.jump then
 
 			minetest.sound_play(self.sounds.jump, {
-				pos = pos,
+				object = self.object,
 				gain = 1.0,
 				max_hear_distance = self.sounds.distance
 			})
@@ -743,8 +741,8 @@ minetest.register_entity(name, {
 	docile_by_day = def.docile_by_day or false,
 	time_of_day = 0.5,
 	fear_height = def.fear_height or 0,
-runaway = def.runaway,
-runaway_timer = 0,
+	runaway = def.runaway,
+	runaway_timer = 0,
 
 	on_step = function(self, dtime)
 
@@ -989,7 +987,7 @@ runaway_timer = 0,
 		or self.order == "follow")
 		and not self.following
 		and self.state ~= "attack"
-and self.state ~= "runaway" then
+		and self.state ~= "runaway" then
 
 			local s, p, dist
 
@@ -1358,7 +1356,7 @@ and self.state ~= "runaway" then
 						if self.sounds.explode then
 
 							minetest.sound_play(self.sounds.explode, {
-								pos = pos,
+								object = self.object,
 								gain = 1.0,
 								max_hear_distance = 16
 							})
@@ -1699,9 +1697,9 @@ and self.state ~= "runaway" then
 
 	on_activate = function(self, staticdata, dtime_s)
 
-		-- remove monsters if playing on peaceful
-		if self.type == "monster"
-		and peaceful_only then
+		-- remove monsters in peaceful mode, or when no data
+		if (self.type == "monster" and peaceful_only)
+		or not staticdata then
 
 			self.object:remove()
 
@@ -1709,20 +1707,13 @@ and self.state ~= "runaway" then
 		end
 
 		-- load entity variables
-		if staticdata then
+		local tmp = minetest.deserialize(staticdata)
 
-			local tmp = minetest.deserialize(staticdata)
+		if tmp then
 
-			if tmp then
-
-				for _,stat in pairs(tmp) do
-					self[_] = stat
-				end
+			for _,stat in pairs(tmp) do
+				self[_] = stat
 			end
-		else
-			self.object:remove()
-
-			return
 		end
 
 		-- select random texture, set model and size
@@ -1796,11 +1787,11 @@ and self.state ~= "runaway" then
 	get_staticdata = function(self)
 
 		-- remove mob when out of range unless tamed
-		if mobs.remove
+		if remove_far
 		and self.remove_ok
 		and not self.tamed then
 
-			--print ("REMOVED", self.remove_ok, self.name)
+			--print ("REMOVED " .. self.name)
 
 			self.object:remove()
 
@@ -1883,7 +1874,7 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			pos.y = pos.y + 1
 
 			-- mobs cannot spawn in protected areas when enabled
-			if mobs.protected == 1
+			if spawn_protected == 1
 			and minetest.is_protected(pos, "") then
 				return
 			end

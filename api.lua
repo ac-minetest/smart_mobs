@@ -1,4 +1,4 @@
--- Mobs Api (25th January 2016)
+-- Mobs Api (27th January 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -2107,7 +2107,8 @@ function mobs:register_arrow(name, def)
 					and player:get_luaentity().name ~= self.object:get_luaentity().name
 					and player:get_luaentity().name ~= "__builtin:item"
 					and player:get_luaentity().name ~= "gauges:hp_bar"
-					and player:get_luaentity().name ~= "signs:text" then
+					and player:get_luaentity().name ~= "signs:text"
+					and player:get_luaentity().name ~= "itemframes:item" then
 
 						self.hit_mob(self, player)
 

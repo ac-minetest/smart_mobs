@@ -456,9 +456,7 @@ function node_ok(pos, fallback)
 		return minetest.registered_nodes[fallback]
 	end
 
-	local nodef = minetest.registered_nodes[node.name]
-
-	if nodef then
+	if minetest.registered_nodes[node.name] then
 		return node
 	end
 

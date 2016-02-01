@@ -321,8 +321,8 @@ do_env_damage = function(self)
 
 		pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
 
-		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod.name)
-		local nodef = minetest.registered_nodes[nod.name]
+		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod)
+		local nodef = minetest.registered_nodes[nod]
 
 		pos.y = pos.y + 1
 
@@ -338,8 +338,8 @@ do_env_damage = function(self)
 		-- lava or fire
 		if self.lava_damage ~= 0
 		and (nodef.groups.lava
-		or nod.name == "fire:basic_flame"
-		or nod.name == "fire:permanent_flame") then
+		or nod == "fire:basic_flame"
+		or nod == "fire:permanent_flame") then
 
 			self.object:set_hp(self.object:get_hp() - self.lava_damage)
 
@@ -365,9 +365,9 @@ do_jump = function(self)
 
 	local nod = node_ok(pos)
 
---print ("standing on:", nod.name, pos.y)
+--print ("standing on:", nod, pos.y)
 
-	if minetest.registered_nodes[nod.name].walkable == false then
+	if minetest.registered_nodes[nod].walkable == false then
 		return
 	end
 
@@ -377,21 +377,21 @@ do_jump = function(self)
 	local dir_z = math.cos(yaw) * (self.collisionbox[4] + 0.5)
 
 	-- what is in front of mob?
-	local nod = node_ok({
+	nod = node_ok({
 		x = pos.x + dir_x,
 		y = pos.y + 0.5,
 		z = pos.z + dir_z
 	})
 
 	-- thin blocks that do not need to be jumped
-	if nod.name == "default:snow" then
+	if nod == "default:snow" then
 		return
 	end
 
---print ("in front:", nod.name, pos.y + 0.5)
+--print ("in front:", nod, pos.y + 0.5)
 
-	if minetest.registered_items[nod.name].walkable
-	and not nod.name:find("fence")
+	if minetest.registered_items[nod].walkable
+	and not nod:find("fence")
 	or self.walk_chance == 0 then
 
 		local v = self.object:getvelocity()
@@ -453,14 +453,14 @@ function node_ok(pos, fallback)
 	local node = minetest.get_node_or_nil(pos)
 
 	if not node then
-		return minetest.registered_nodes[fallback]
+		return fallback
 	end
 
 	if minetest.registered_nodes[node.name] then
-		return node
+		return node.name
 	end
 
-	return minetest.registered_nodes[fallback]
+	return fallback
 end
 
 -- should mob follow what I'm holding ?
@@ -783,7 +783,7 @@ minetest.register_entity(name, {
 			end
 
 			-- in water then float up
-			if minetest.registered_nodes[node_ok(pos).name].groups.water then
+			if minetest.registered_nodes[node_ok(pos)].groups.water then
 
 				if self.floats == 1 then
 
@@ -1383,14 +1383,13 @@ minetest.register_entity(name, {
 			if self.fly
 			and dist > self.reach then
 
-				local nod = node_ok(s)
 				local p1 = s
 				local me_y = math.floor(p1.y)
 				local p2 = p
 				local p_y = math.floor(p2.y + 1)
 				local v = self.object:getvelocity()
 
-				if nod.name == self.fly_in then
+				if node_ok(s) == self.fly_in then
 
 					if me_y < p_y then
 
@@ -1887,13 +1886,13 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			end
 
 			-- are we spawning inside solid nodes?
-			if minetest.registered_nodes[node_ok(pos).name].walkable == true then
+			if minetest.registered_nodes[node_ok(pos)].walkable == true then
 				return
 			end
 
 			pos.y = pos.y + 1
 
-			if minetest.registered_nodes[node_ok(pos).name].walkable == true then
+			if minetest.registered_nodes[node_ok(pos)].walkable == true then
 				return
 			end
 
@@ -1978,7 +1977,7 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 		and data[vi] ~= c_brick
 		and data[vi] ~= c_chest then
 
-			local n = node_ok(p).name
+			local n = node_ok(p)
 
 			if minetest.get_item_group(n, "unbreakable") ~= 1 then
 
@@ -2066,9 +2065,7 @@ function mobs:register_arrow(name, def)
 
 			if self.hit_node then
 
-				local node = node_ok(pos).name
-
-				if minetest.registered_nodes[node].walkable then
+				if minetest.registered_nodes[node_ok(pos)].walkable then
 
 					self.hit_node(self, pos, node)
 

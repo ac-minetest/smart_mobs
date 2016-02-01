@@ -322,13 +322,14 @@ do_env_damage = function(self)
 		pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
 
 		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod)
-		local nodef = minetest.registered_nodes[nod]
+		--local nodef = minetest.registered_nodes[nod]
 
 		pos.y = pos.y + 1
 
 		-- water
 		if self.water_damage ~= 0
-		and nodef.groups.water then
+		--and nodef.groups.water then
+		and minetest.get_item_group(nod, "water") ~= 0 then
 
 			self.object:set_hp(self.object:get_hp() - self.water_damage)
 
@@ -337,7 +338,8 @@ do_env_damage = function(self)
 
 		-- lava or fire
 		if self.lava_damage ~= 0
-		and (nodef.groups.lava
+		--and (nodef.groups.lava
+		and (minetest.get_item_group(nod, "lava") ~= 0
 		or nod == "fire:basic_flame"
 		or nod == "fire:permanent_flame") then
 
@@ -783,7 +785,8 @@ minetest.register_entity(name, {
 			end
 
 			-- in water then float up
-			if minetest.registered_nodes[node_ok(pos)].groups.water then
+			--if minetest.registered_nodes[node_ok(pos)].groups.water then
+			if minetest.get_item_group(node_ok(pos), "water") ~= 0 then
 
 				if self.floats == 1 then
 
@@ -1885,14 +1888,19 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 				return
 			end
 
+			local nod = node_ok(pos)
+
 			-- are we spawning inside solid nodes?
-			if minetest.registered_nodes[node_ok(pos)].walkable == true then
+			if minetest.registered_nodes[nod]
+			and minetest.registered_nodes[nod].walkable == true then
 				return
 			end
 
 			pos.y = pos.y + 1
+			nod = node_ok(pos)
 
-			if minetest.registered_nodes[node_ok(pos)].walkable == true then
+			if minetest.registered_nodes[nod]
+			and minetest.registered_nodes[node_ok(pos)].walkable == true then
 				return
 			end
 
@@ -2007,7 +2015,8 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 
 				-- after effects
 				if fire > 0
-				and (minetest.registered_nodes[n].groups.flammable
+				--and (minetest.registered_nodes[n].groups.flammable
+				and (minetest.get_item_group(n, "flammable") ~= 0
 				or math.random(1, 100) <= 30) then
 
 					minetest.set_node(p, {name = "fire:basic_flame"})

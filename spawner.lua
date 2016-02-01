@@ -1,6 +1,6 @@
 -- mob spawner
 
-local spawner_default = "mobs:pumba 10 15 0"
+local spawner_default = "mobs:pumba 10 14 0"
 
 minetest.register_node("mobs:spawner", {
 	tiles = {"mob_spawner.png"},
@@ -46,8 +46,8 @@ minetest.register_node("mobs:spawner", {
 
 		if mob and mob ~= ""
 		and num and num >= 0 and num <= 10
-		and mlig and mlig >= 0 and mlig <= 15
-		and xlig and xlig >= 0 and xlig <= 15 then
+		and mlig and mlig >= 0 and mlig <= 14
+		and xlig and xlig >= 0 and xlig <= 14 then
 
 			meta:set_string("command", fields.text)
 			meta:set_string("infotext", "Spawner Active (" .. mob .. ")")

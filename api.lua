@@ -748,7 +748,7 @@ minetest.register_entity(name, {
 			if self.lifetimer <= 0 then
 
 				-- only despawn away from player
-				local objs = minetest.get_objects_inside_radius(pos, 12)
+				local objs = minetest.get_objects_inside_radius(pos, 10)
 
 				for _,oir in pairs(objs) do
 
@@ -1875,7 +1875,7 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			pos.y = pos.y + 1
 
 			-- only spawn away from player
-			local objs = minetest.get_objects_inside_radius(pos, 12)
+			local objs = minetest.get_objects_inside_radius(pos, 10)
 
 			for _,oir in pairs(objs) do
 

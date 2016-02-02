@@ -1,4 +1,4 @@
--- Mobs Api (1st February 2016)
+-- Mobs Api (2nd February 2016)
 mobs = {}
 mobs.mod = "redo"
 
@@ -35,21 +35,12 @@ end
 
 set_velocity = function(self, v)
 
-	local x = 0
-	local z = 0
-
---	if v and v ~= 0 then
-
-		local yaw = (self.object:getyaw() + self.rotate) or 0
-
-		x = math.sin(yaw) * -v
-		z = math.cos(yaw) * v
---	end
+	local yaw = (self.object:getyaw() + self.rotate) or 0
 
 	self.object:setvelocity({
-		x = x,
+		x = math.sin(yaw) * -v,
 		y = self.object:getvelocity().y,
-		z = z
+		z = math.cos(yaw) * v
 	})
 end
 
@@ -322,13 +313,11 @@ do_env_damage = function(self)
 		pos.y = pos.y + self.collisionbox[2] + 0.1 -- foot level
 
 		local nod = node_ok(pos, "air") ;  --print ("standing in "..nod)
-		--local nodef = minetest.registered_nodes[nod]
 
 		pos.y = pos.y + 1
 
 		-- water
 		if self.water_damage ~= 0
-		--and nodef.groups.water then
 		and minetest.get_item_group(nod, "water") ~= 0 then
 
 			self.object:set_hp(self.object:get_hp() - self.water_damage)
@@ -338,7 +327,6 @@ do_env_damage = function(self)
 
 		-- lava or fire
 		if self.lava_damage ~= 0
-		--and (nodef.groups.lava
 		and (minetest.get_item_group(nod, "lava") ~= 0
 		or nod == "fire:basic_flame"
 		or nod == "fire:permanent_flame") then
@@ -758,6 +746,19 @@ minetest.register_entity(name, {
 
 			if self.lifetimer <= 0 then
 
+				-- only despawn away from player
+				local objs = minetest.get_objects_inside_radius(pos, 12)
+
+				for _,oir in pairs(objs) do
+
+					if oir:is_player() then
+
+						self.lifetimer = 20
+
+						return
+					end
+				end
+
 				minetest.log("action",
 					"lifetimer expired, removed " .. self.name)
 
@@ -785,7 +786,6 @@ minetest.register_entity(name, {
 			end
 
 			-- in water then float up
-			--if minetest.registered_nodes[node_ok(pos)].groups.water then
 			if minetest.get_item_group(node_ok(pos), "water") ~= 0 then
 
 				if self.floats == 1 then
@@ -1872,6 +1872,16 @@ function mobs:spawn_specific(name, nodes, neighbors, min_light, max_light,
 			-- spawn above node
 			pos.y = pos.y + 1
 
+			-- only spawn away from player
+			local objs = minetest.get_objects_inside_radius(pos, 12)
+
+			for _,oir in pairs(objs) do
+
+				if oir:is_player() then
+					return
+				end
+			end
+
 			-- mobs cannot spawn in protected areas when enabled
 			if spawn_protected == 1
 			and minetest.is_protected(pos, "") then
@@ -2015,7 +2025,6 @@ function mobs:explosion(pos, radius, fire, smoke, sound)
 
 				-- after effects
 				if fire > 0
-				--and (minetest.registered_nodes[n].groups.flammable
 				and (minetest.get_item_group(n, "flammable") ~= 0
 				or math.random(1, 100) <= 30) then
 

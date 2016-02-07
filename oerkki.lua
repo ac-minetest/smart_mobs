@@ -32,7 +32,7 @@ mobs:register_mob("mobs:oerkki", {
 	water_damage = 2,
 	lava_damage = 4,
 	light_damage = 1,
-	fear_height = 3,
+	fear_height = 6,
 	animation = {
 		stand_start = 0,
 		stand_end = 23,

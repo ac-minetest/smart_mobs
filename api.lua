@@ -1483,10 +1483,10 @@ minetest.register_entity(name, {
 						s.x=math.floor(s.x+0.5);s.y=math.floor(s.y+0.5)-sheight;s.z=math.floor(s.z+0.5); -- round position to center of node to avoid stuck in walls, also adjust height for player models!
 						local ssight,sground;ssight,sground=minetest.line_of_sight(s, {x=s.x,y=s.y-4,z=s.z}, 1); if not ssight then s.y=sground.y+1	end-- determine node above ground
 						
-						minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
+						--minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
 						local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
 						--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
-						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"Dijkstra"); --"A*_noprefetch");
+						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"A*_noprefetch"); --"A*_noprefetch");
 						if not self.path.way then 
 							self.path.stuck=false 
 							minetest.sound_play(self.sounds.random, { -- frustration! cant find the damn path:(
@@ -1500,7 +1500,7 @@ minetest.register_entity(name, {
 										max_hear_distance = self.sounds.distance
 									})
 								end
-							minetest.chat_send_all("found path with length " .. #self.path.way);
+							--minetest.chat_send_all("found path with length " .. #self.path.way);
 						end
 						self.path.stuck_timer=0;
 					end 

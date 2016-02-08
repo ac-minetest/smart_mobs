@@ -10,6 +10,7 @@ local creative = minetest.setting_getbool("creative_mode")
 local spawn_protected = tonumber(minetest.setting_get("mobs_spawn_protected")) or 1
 local remove_far = minetest.setting_getbool("remove_far_mobs")
 -- PATHFINDING settings 
+local enable_pathfinding = true
 local stuck_timeout = 5 -- how long before mob gets stuck in place and starts searching
 local stuck_path_timeout = 15 -- how long will mob follow path before giving up
 
@@ -894,7 +895,6 @@ minetest.register_entity(name, {
 		and self.state ~= "attack"
 		and not day_docile(self) then
 
-			-- rnd to do: if stuck then find better way
 			local s = self.object:getpos()
 			local p, sp, dist
 			local player = nil
@@ -1261,7 +1261,7 @@ minetest.register_entity(name, {
 			end
 
 		-- attack routines (explode, dogfight, shoot, dogshoot)
-		elseif self.state == "attack" then -- rnd : to do if cant attack search better way
+		elseif self.state == "attack" then 
 
 		-- calculate distance from mob and enemy
 		local s = self.object:getpos()
@@ -1470,30 +1470,41 @@ minetest.register_entity(name, {
 			if dist > self.reach then
 
 				-- PATH FINDING by rnd
-				local s1 = self.path.lastpos;
-				if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<2 then -- rnd: almost standing still, to do: insert path finding here
-					self.path.stuck_timer = self.path.stuck_timer+dtime
-				else self.path.stuck_timer = 0;
-				end
-				self.path.lastpos = {x=s.x,y=s.y,z=s.z};
-				if (self.path.stuck_timer>stuck_timeout and not self.path.stuck) or (self.path.stuck_timer>stuck_path_timeout and self.path.stuck) then -- im stuck, search for path
-					self.path.stuck = true;
-					local sheight=self.collisionbox[5]-self.collisionbox[2];
-					s.x=math.floor(s.x+0.5);s.y=math.floor(s.y+0.5)-sheight;s.z=math.floor(s.z+0.5); -- round position to center of node to avoid stuck in walls, also adjust height for player models!
-					--minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
-					local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
-					--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
-					self.path.way = minetest.find_path(s, p1, 16, 2, 6,"A*_noprefetch"); --"A*_noprefetch");
-					if not self.path.way then 
-						self.path.stuck=false 
-						minetest.sound_play(self.sounds.attack, { -- play sound to acknowledge found way
-							object = self.object,
-							max_hear_distance = self.sounds.distance
-						})
-						--else minetest.chat_send_all("found path with length " .. #self.path.way);
+				if enable_pathfinding then
+					local s1 = self.path.lastpos;
+					if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<2 then 
+						self.path.stuck_timer = self.path.stuck_timer+dtime
+					else self.path.stuck_timer = 0;
 					end
-					self.path.stuck_timer=0;
-				end 
+					self.path.lastpos = {x=s.x,y=s.y,z=s.z};
+					if (self.path.stuck_timer>stuck_timeout and not self.path.stuck) or (self.path.stuck_timer>stuck_path_timeout and self.path.stuck) then -- im stuck, search for path
+						self.path.stuck = true;
+						local sheight=self.collisionbox[5]-self.collisionbox[2];
+						s.x=math.floor(s.x+0.5);s.y=math.floor(s.y+0.5)-sheight;s.z=math.floor(s.z+0.5); -- round position to center of node to avoid stuck in walls, also adjust height for player models!
+						local ssight,sground;ssight,sground=minetest.line_of_sight(s, {x=s.x,y=s.y-4,z=s.z}, 1); if not ssight then s.y=sground.y+1	end-- determine node above ground
+						
+						minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
+						local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
+						--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
+						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"Dijkstra"); --"A*_noprefetch");
+						if not self.path.way then 
+							self.path.stuck=false 
+							minetest.sound_play(self.sounds.random, { -- frustration! cant find the damn path:(
+								object = self.object,
+								max_hear_distance = self.sounds.distance
+							})
+							else 
+								if self.sounds.random then -- yay i found path
+									minetest.sound_play(self.sounds.attack, {
+										object = self.object,
+										max_hear_distance = self.sounds.distance
+									})
+								end
+							minetest.chat_send_all("found path with length " .. #self.path.way);
+						end
+						self.path.stuck_timer=0;
+					end 
+				end
 				-- END PATH FINDING
 				
 				-- jump attack

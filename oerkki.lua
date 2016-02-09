@@ -21,8 +21,8 @@ mobs:register_mob("mobs:oerkki", {
 	sounds = {
 		random = "mobs_oerkki",
 	},
-	walk_velocity = 1,
-	run_velocity = 3,
+	walk_velocity = 2,
+	run_velocity = 4,
 	view_range = 10,
 	jump = true,
 	drops = {
@@ -31,7 +31,7 @@ mobs:register_mob("mobs:oerkki", {
 	},
 	water_damage = 2,
 	lava_damage = 4,
-	light_damage = 1,
+	light_damage = 0,
 	fear_height = 6,
 	animation = {
 		stand_start = 0,

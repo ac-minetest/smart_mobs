@@ -11,6 +11,7 @@ local spawn_protected = tonumber(minetest.setting_get("mobs_spawn_protected")) o
 local remove_far = minetest.setting_getbool("remove_far_mobs")
 -- PATHFINDING settings 
 local enable_pathfinding = true
+local enable_pathfind_digging = true
 local stuck_timeout = 5 -- how long before mob gets stuck in place and starts searching
 local stuck_path_timeout = 15 -- how long will mob follow path before giving up
 
@@ -1442,7 +1443,7 @@ minetest.register_entity(name, {
 			if self.path.stuck and self.path.way then
 				if #self.path.way>50 then self.path.stuck = false return end -- no paths longer than 50
 				local p1 = self.path.way[1]; if not p1 then self.path.stuck = false return end
-				if math.abs(p1.x-s.x)+math.abs(p1.z-s.z)<0.75 then -- reached waypoint, remove it from queue
+				if math.abs(p1.x-s.x)+math.abs(p1.z-s.z)<0.6 then -- reached waypoint, remove it from queue
 					table.remove(self.path.way,1);
 				end
 				p = {x=p1.x,y=p1.y,z=p1.z}; -- set new temporary target
@@ -1472,7 +1473,7 @@ minetest.register_entity(name, {
 				-- PATH FINDING by rnd
 				if enable_pathfinding then
 					local s1 = self.path.lastpos;
-					if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<2 then 
+					if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<1. then -- is it becoming stuck?
 						self.path.stuck_timer = self.path.stuck_timer+dtime
 					else self.path.stuck_timer = 0;
 					end
@@ -1486,15 +1487,35 @@ minetest.register_entity(name, {
 						--minetest.chat_send_all("stuck at " .. s.x .." " .. s.y .. " " .. s.z .. ", calculating path")
 						local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
 						--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
-						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"A*_noprefetch"); --"A*_noprefetch");
+						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"Dijkstra"); --"A*_noprefetch");
 						if not self.path.way then 
 							self.path.stuck=false 
+							if enable_pathfind_digging then -- lets make way by digging/building if not accessible
+								if s.y<p.y then -- add block
+									if not minetest.is_protected(s,"") then
+										minetest.set_node(s,{name="default:stone"});
+									end
+								else
+									local yaw1= self.object:getyaw()+pi/2; -- dig 2 blocks to make door
+									local p1 = {x=s.x+math.cos(yaw1),y=s.y,z=s.z+math.sin(yaw1)};
+									if not minetest.is_protected(p1,"") then
+										local node1=minetest.get_node(p1).name;
+										
+										if node1~="air" then minetest.add_item(p1,ItemStack(node1));minetest.set_node(p1,{name="air"}) end
+										p1.y=p1.y+1;node1=minetest.get_node(p1).name;
+										if node1~="air" then minetest.add_item(p1,ItemStack(node1)) end
+										minetest.set_node(p1,{name="air"});
+									end
+								end
+								
+							end
 							minetest.sound_play(self.sounds.random, { -- frustration! cant find the damn path:(
 								object = self.object,
 								max_hear_distance = self.sounds.distance
 							})
 							else 
 								if self.sounds.random then -- yay i found path
+									set_velocity(self, self.walk_velocity)
 									minetest.sound_play(self.sounds.attack, {
 										object = self.object,
 										max_hear_distance = self.sounds.distance
@@ -1520,11 +1541,13 @@ minetest.register_entity(name, {
 				
 
 				if is_at_cliff(self) then
-
 					set_velocity(self, 0)
 					set_animation(self, "stand")
-				else
-					set_velocity(self, self.run_velocity)
+				else 
+					if self.path.stuck then
+						set_velocity(self, self.walk_velocity)
+						else set_velocity(self, self.run_velocity)
+					end
 					set_animation(self, "run")
 				end
 

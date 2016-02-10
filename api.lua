@@ -1525,9 +1525,10 @@ minetest.register_entity(name, {
 									})
 								end
 							--minetest.chat_send_all("found path with length " .. #self.path.way);
+						self.state = "stand"
 						end
 						self.path.stuck_timer=0
-						self.state = "stand"
+						
 					end 
 				end
 				-- END PATH FINDING

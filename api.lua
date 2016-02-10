@@ -1500,7 +1500,7 @@ minetest.register_entity(name, {
 											local node1=minetest.get_node(s).name;
 											if node1~="air" then minetest.set_node(s,{name="air"});minetest.add_item(s,ItemStack(node1)) end
 										end
-										s.y=s.y-sheight;self.object:setpos({x=s.x,y=s.y+1,z=s.z});
+										s.y=s.y-sheight;self.object:setpos({x=s.x,y=s.y+2,z=s.z});
 									else
 										local yaw1= self.object:getyaw()+pi/2; -- dig 2 blocks to make door toward player direction
 										local p1 = {x=s.x+math.cos(yaw1),y=s.y,z=s.z+math.sin(yaw1)};

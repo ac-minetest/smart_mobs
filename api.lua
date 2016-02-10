@@ -1446,7 +1446,6 @@ minetest.register_entity(name, {
 				if math.abs(p1.x-s.x)+math.abs(p1.z-s.z)<0.6 then -- reached waypoint, remove it from queue
 					table.remove(self.path.way,1);
 				end
-				
 					p = {x=p1.x,y=p1.y,z=p1.z}; -- set new temporary target
 			end
 			
@@ -1528,6 +1527,7 @@ minetest.register_entity(name, {
 							--minetest.chat_send_all("found path with length " .. #self.path.way);
 						end
 						self.path.stuck_timer=0
+						self.state = "stand"
 					end 
 				end
 				-- END PATH FINDING

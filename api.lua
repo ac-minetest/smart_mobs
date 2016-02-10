@@ -1489,24 +1489,28 @@ minetest.register_entity(name, {
 						local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
 						--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
 						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"Dijkstra"); --"A*_noprefetch");
-						if not self.path.way then 
+						if not self.path.way then -- no path found
 							self.path.stuck=false 
-							if enable_pathfind_digging then -- lets make way by digging/building if not accessible
-								if s.y<p.y then -- add block
-									if not minetest.is_protected(s,"") then
-										minetest.set_node(s,{name="default:stone"});
-									end
-								else
-									local yaw1= self.object:getyaw()+pi/2; -- dig 2 blocks to make door
-									local p1 = {x=s.x+math.cos(yaw1),y=s.y,z=s.z+math.sin(yaw1)};
-									if not minetest.is_protected(p1,"") then
-										local node1=minetest.get_node(p1).name;
-										
-										if node1~="air" then minetest.add_item(p1,ItemStack(node1));minetest.set_node(p1,{name="air"}) end
-										p1.y=p1.y+1;node1=minetest.get_node(p1).name;
-										if node1~="air" then minetest.add_item(p1,ItemStack(node1)) end
-										minetest.set_node(p1,{name="air"});
-									end
+							if enable_pathfind_digging and self.path.stuck_timer>1 then -- lets make way by digging/building if not accessible
+								if s.y<p.y then -- add block and remove one block above so there is room to jump if needed
+									if not minetest.is_protected(s,"") then	minetest.set_node(s,{name="mobs:stone"}); end
+										local sheight=math.ceil(self.collisionbox[5]);
+										s.y=s.y+sheight; -- assume mob is 2 blocks high so it digs above its head
+										if not minetest.is_protected(s,"") then	
+											local node1=minetest.get_node(s).name;
+											if node1~="air" then minetest.set_node(s,{name="air"});minetest.add_item(s,ItemStack(node1)) end
+										end
+										s.y=s.y-sheight;self.jump=true
+									else
+										local yaw1= self.object:getyaw()+pi/2; -- dig 2 blocks to make door toward player direction
+										local p1 = {x=s.x+math.cos(yaw1),y=s.y,z=s.z+math.sin(yaw1)};
+										if not minetest.is_protected(p1,"") then
+											local node1=minetest.get_node(p1).name;
+											if node1~="air" then minetest.add_item(p1,ItemStack(node1));minetest.set_node(p1,{name="air"}) end
+											p1.y=p1.y+1;node1=minetest.get_node(p1).name;
+											if node1~="air" then minetest.add_item(p1,ItemStack(node1)) end
+											minetest.set_node(p1,{name="air"});
+										end
 								end
 								
 							end
@@ -1554,7 +1558,7 @@ minetest.register_entity(name, {
 
 			else
 
-				self.path.stuck = false; -- rnd: no more stuck
+				self.path.stuck = false; self.path.stuck_timer=0 -- rnd: no more stuck
 				set_velocity(self, 0)
 				set_animation(self, "punch")
 
@@ -2502,3 +2506,18 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
 	end
 end)
+
+-- rnd: special stone that disappears after 30 seconds, used by mobs
+minetest.register_node("mobs:stone", {
+	description = "Stone",
+	tiles = {"default_stone.png"},
+	groups = {cracky=3, stone=1},
+	drop = 'default:cobble',
+	legacy_mineral = true,
+	sounds = default.node_sound_stone_defaults(),
+	on_construct = function(pos)
+		minetest.after(30, function()
+			minetest.set_node(pos, {name = "air"})
+		end)
+	end
+})

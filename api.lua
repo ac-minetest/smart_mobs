@@ -1489,18 +1489,18 @@ minetest.register_entity(name, {
 						local p1 = self.attack:getpos();p1.x=math.floor(p1.x+0.5);p1.y=math.floor(p1.y+0.5);p1.z=math.floor(p1.z+0.5);
 						--minetest.find_path(pos1, pos2, searchdistance, max_jump, max_drop, algorithm)
 						self.path.way = minetest.find_path(s, p1, 16, 2, 6,"Dijkstra"); --"A*_noprefetch");
-						if not self.path.way then -- no path found
+						if not self.path.way then -- no path found, try something else
 							self.path.stuck=false 
 							if enable_pathfind_digging and self.path.stuck_timer>1 then -- lets make way by digging/building if not accessible
 								if s.y<p.y then -- add block and remove one block above so there is room to jump if needed
 									if not minetest.is_protected(s,"") then	minetest.set_node(s,{name="mobs:stone"}); end
-										local sheight=math.ceil(self.collisionbox[5]);
+										local sheight=math.ceil(self.collisionbox[5])+1;
 										s.y=s.y+sheight; -- assume mob is 2 blocks high so it digs above its head
 										if not minetest.is_protected(s,"") then	
 											local node1=minetest.get_node(s).name;
 											if node1~="air" then minetest.set_node(s,{name="air"});minetest.add_item(s,ItemStack(node1)) end
 										end
-										s.y=s.y-sheight;self.jump=true
+										s.y=s.y-sheight;self.object:setpos({x=s.x,y=s.y+1,z=s.z});
 									else
 										local yaw1= self.object:getyaw()+pi/2; -- dig 2 blocks to make door toward player direction
 										local p1 = {x=s.x+math.cos(yaw1),y=s.y,z=s.z+math.sin(yaw1)};
@@ -1512,7 +1512,6 @@ minetest.register_entity(name, {
 											minetest.set_node(p1,{name="air"});
 										end
 								end
-								
 							end
 							minetest.sound_play(self.sounds.random, { -- frustration! cant find the damn path:(
 								object = self.object,
@@ -1528,7 +1527,7 @@ minetest.register_entity(name, {
 								end
 							--minetest.chat_send_all("found path with length " .. #self.path.way);
 						end
-						self.path.stuck_timer=0;
+						self.path.stuck_timer=0
 					end 
 				end
 				-- END PATH FINDING

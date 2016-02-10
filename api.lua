@@ -1441,12 +1441,13 @@ minetest.register_entity(name, {
 			-- rnd: new movement direction
 			
 			if self.path.stuck and self.path.way then
-				if #self.path.way>50 then self.path.stuck = false return end -- no paths longer than 50
+				if #self.path.way>50 or dist<self.reach then self.path.stuck = false return end -- no paths longer than 50
 				local p1 = self.path.way[1]; if not p1 then self.path.stuck = false return end
 				if math.abs(p1.x-s.x)+math.abs(p1.z-s.z)<0.6 then -- reached waypoint, remove it from queue
 					table.remove(self.path.way,1);
 				end
-				p = {x=p1.x,y=p1.y,z=p1.z}; -- set new temporary target
+				
+					p = {x=p1.x,y=p1.y,z=p1.z}; -- set new temporary target
 			end
 			
 			local vec = {
@@ -1473,7 +1474,7 @@ minetest.register_entity(name, {
 				-- PATH FINDING by rnd
 				if enable_pathfinding then
 					local s1 = self.path.lastpos;
-					if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<1. then -- is it becoming stuck?
+					if math.abs(s1.x-s.x)+math.abs(s1.z-s.z)<1.5 then -- is it becoming stuck?
 						self.path.stuck_timer = self.path.stuck_timer+dtime
 					else self.path.stuck_timer = 0;
 					end
@@ -1553,6 +1554,7 @@ minetest.register_entity(name, {
 
 			else
 
+				self.path.stuck = false; -- rnd: no more stuck
 				set_velocity(self, 0)
 				set_animation(self, "punch")
 
@@ -1577,7 +1579,6 @@ minetest.register_entity(name, {
 							})
 						end
 						
-						self.path.stuck = false; -- rnd: no more stuck
 
 						-- punch player
 						self.attack:punch(self.object, 1.0, {
@@ -1755,6 +1756,7 @@ minetest.register_entity(name, {
 		and hitter:get_player_name() ~= self.owner then
 
 			if self.state ~= "attack" then
+				self.path.stuck=false; -- dont follow path anymore
 				do_attack(self, hitter)
 			end
 

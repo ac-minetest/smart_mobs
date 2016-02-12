@@ -1493,7 +1493,7 @@ minetest.register_entity(name, {
 						if not self.path.way then -- no path found, try something else
 							self.path.following=false;
 							self.path.stuck = true;
-							minetest.chat_send_all("no path");
+							
 							if enable_pathfind_digging then -- lets make way by digging/building if not accessible
 								
 								if s.y<p.y then -- add block and remove one block above so there is room to jump if needed

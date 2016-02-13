@@ -677,7 +677,7 @@ function smart_mobs(self, s, p, dtime)
 	self.path.lastpos = {x = s.x, y = s.y, z = s.z}
 
 	-- im stuck, search for path
-	if (self.path.stuck_timer > stuck_timeout)
+	if (self.path.stuck_timer > stuck_timeout and not self.path.following)
 	or (self.path.stuck_timer > stuck_path_timeout
 	and self.path.following) then
 
